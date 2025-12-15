@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import type { TextAlignment } from "./BannerForm";
 
 interface BannerPreviewProps {
   title: string;
@@ -7,13 +8,32 @@ interface BannerPreviewProps {
   gradientEnd?: string;
   imageUrl?: string;
   scale?: number;
+  titleFontSize: number;
+  titleLineHeight: number;
+  subtitleFontSize: number;
+  subtitleLineHeight: number;
+  textAlignment: TextAlignment;
 }
 
 export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
-  ({ title, subtitle, backgroundColor, gradientEnd, imageUrl, scale = 1 }, ref) => {
+  ({ 
+    title, 
+    subtitle, 
+    backgroundColor, 
+    gradientEnd, 
+    imageUrl, 
+    scale = 1,
+    titleFontSize,
+    titleLineHeight,
+    subtitleFontSize,
+    subtitleLineHeight,
+    textAlignment,
+  }, ref) => {
     const baseWidth = 640;
     const baseHeight = 168;
     const imageAreaWidth = 194;
+    const paddingLeft = 32;
+    const paddingVertical = 24;
 
     const backgroundStyle = gradientEnd
       ? { background: `linear-gradient(135deg, ${backgroundColor} 0%, ${gradientEnd} 100%)` }
@@ -30,6 +50,12 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
       ));
     };
 
+    const justifyContent = textAlignment === "start" 
+      ? "flex-start" 
+      : textAlignment === "end" 
+        ? "flex-end" 
+        : "center";
+
     return (
       <div
         ref={ref}
@@ -43,19 +69,20 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
       >
         {/* Text content */}
         <div
-          className="absolute inset-0 flex flex-col justify-center"
+          className="absolute inset-0 flex flex-col"
           style={{
+            justifyContent,
             paddingRight: imageAreaWidth * scale,
-            paddingLeft: 24 * scale,
-            paddingTop: 20 * scale,
-            paddingBottom: 20 * scale,
+            paddingLeft: paddingLeft * scale,
+            paddingTop: paddingVertical * scale,
+            paddingBottom: paddingVertical * scale,
           }}
         >
           <h2
             className="font-bold text-foreground leading-tight"
             style={{
-              fontSize: 28 * scale,
-              lineHeight: `${32 * scale}px`,
+              fontSize: titleFontSize * scale,
+              lineHeight: `${titleLineHeight * scale}px`,
               marginBottom: 8 * scale,
               fontFamily: "'Euclid Circular A', 'Inter', sans-serif",
               fontWeight: 700,
@@ -66,8 +93,8 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
           <p
             className="text-foreground/80"
             style={{
-              fontSize: 14 * scale,
-              lineHeight: `${18 * scale}px`,
+              fontSize: subtitleFontSize * scale,
+              lineHeight: `${subtitleLineHeight * scale}px`,
               fontFamily: "'Euclid Circular A', 'Inter', sans-serif",
               fontWeight: 400,
             }}
