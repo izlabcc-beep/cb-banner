@@ -1,44 +1,37 @@
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles } from "lucide-react";
+import { ColorPicker } from "./ColorPicker";
 
 interface BannerFormProps {
   title: string;
   setTitle: (value: string) => void;
   subtitle: string;
   setSubtitle: (value: string) => void;
-  gradient: string;
-  setGradient: (value: string) => void;
+  backgroundColor: string;
+  setBackgroundColor: (value: string) => void;
+  gradientEnd: string;
+  setGradientEnd: (value: string) => void;
+  useGradient: boolean;
+  setUseGradient: (value: boolean) => void;
   imagePrompt: string;
   setImagePrompt: (value: string) => void;
   onGenerate: () => void;
   isGenerating: boolean;
 }
 
-const gradientOptions = [
-  { value: "blue", label: "Синий градиент", preview: "banner-gradient-blue" },
-  { value: "purple", label: "Фиолетовый градиент", preview: "banner-gradient-purple" },
-  { value: "green", label: "Зелёный градиент", preview: "banner-gradient-green" },
-  { value: "orange", label: "Оранжевый градиент", preview: "banner-gradient-orange" },
-  { value: "pink", label: "Розовый градиент", preview: "banner-gradient-pink" },
-  { value: "dark", label: "Тёмный градиент", preview: "banner-gradient-dark" },
-];
-
 export const BannerForm = ({
   title,
   setTitle,
   subtitle,
   setSubtitle,
-  gradient,
-  setGradient,
+  backgroundColor,
+  setBackgroundColor,
+  gradientEnd,
+  setGradientEnd,
+  useGradient,
+  setUseGradient,
   imagePrompt,
   setImagePrompt,
   onGenerate,
@@ -46,31 +39,15 @@ export const BannerForm = ({
 }: BannerFormProps) => {
   return (
     <div className="space-y-6">
-      {/* Background color selector */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-foreground">Цвет фона</Label>
-        <Select value={gradient} onValueChange={setGradient}>
-          <SelectTrigger className="w-full bg-input border-border text-foreground">
-            <SelectValue placeholder="Выбрать цвет" />
-          </SelectTrigger>
-          <SelectContent className="bg-card border-border">
-            {gradientOptions.map((option) => (
-              <SelectItem
-                key={option.value}
-                value={option.value}
-                className="text-foreground focus:bg-muted focus:text-foreground"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-5 h-5 rounded ${option.preview}`}
-                  />
-                  <span>{option.label}</span>
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Color picker */}
+      <ColorPicker
+        backgroundColor={backgroundColor}
+        setBackgroundColor={setBackgroundColor}
+        gradientEnd={gradientEnd}
+        setGradientEnd={setGradientEnd}
+        useGradient={useGradient}
+        setUseGradient={setUseGradient}
+      />
 
       {/* Title input */}
       <div className="space-y-2">
@@ -80,7 +57,7 @@ export const BannerForm = ({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           maxLength={200}
-          className="resize-none bg-input border-border text-foreground placeholder:text-muted-foreground min-h-[60px]"
+          className="resize-none bg-input border-border text-foreground placeholder:text-muted-foreground min-h-[70px]"
         />
         <p className="text-xs text-muted-foreground">Max: 200</p>
       </div>
@@ -93,7 +70,7 @@ export const BannerForm = ({
           value={subtitle}
           onChange={(e) => setSubtitle(e.target.value)}
           maxLength={200}
-          className="resize-none bg-input border-border text-foreground placeholder:text-muted-foreground min-h-[60px]"
+          className="resize-none bg-input border-border text-foreground placeholder:text-muted-foreground min-h-[70px]"
         />
         <p className="text-xs text-muted-foreground">Max: 200</p>
       </div>
