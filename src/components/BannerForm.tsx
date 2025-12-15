@@ -62,7 +62,7 @@ export const BannerForm = ({
   setTextAlignment,
 }: BannerFormProps) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Color picker */}
       <ColorPicker
         backgroundColor={backgroundColor}
@@ -74,96 +74,110 @@ export const BannerForm = ({
       />
 
       {/* Text alignment */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-foreground">Выравнивание текста</Label>
+      <div className="flex items-center gap-3">
+        <Label className="text-sm font-medium text-foreground">Выравнивание</Label>
         <ToggleGroup
           type="single"
           value={textAlignment}
           onValueChange={(value) => value && setTextAlignment(value as TextAlignment)}
           className="justify-start"
         >
-          <ToggleGroupItem value="start" aria-label="Сверху" className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+          <ToggleGroupItem value="start" aria-label="Сверху" className="h-8 w-8 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
             <AlignVerticalJustifyStart className="h-4 w-4" />
           </ToggleGroupItem>
-          <ToggleGroupItem value="center" aria-label="По центру" className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+          <ToggleGroupItem value="center" aria-label="По центру" className="h-8 w-8 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
             <AlignVerticalJustifyCenter className="h-4 w-4" />
           </ToggleGroupItem>
-          <ToggleGroupItem value="end" aria-label="Снизу" className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+          <ToggleGroupItem value="end" aria-label="Снизу" className="h-8 w-8 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
             <AlignVerticalJustifyEnd className="h-4 w-4" />
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
 
       {/* Title input */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-foreground">Заголовок</Label>
-        <Textarea
-          placeholder="Впишите ваш заголовок"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          maxLength={200}
-          className="resize-none bg-input border-border text-foreground placeholder:text-muted-foreground min-h-[70px]"
-        />
-        <div className="flex gap-4 mt-2">
-          <div className="flex-1">
-            <Label className="text-xs text-muted-foreground">Размер</Label>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium text-foreground">Заголовок</Label>
+          <div className="flex gap-2 items-center">
             <Input
               type="number"
               value={titleFontSize}
               onChange={(e) => setTitleFontSize(Number(e.target.value))}
               min={12}
               max={48}
-              className="h-8 bg-input border-border text-foreground"
+              className="w-14 h-7 bg-input border-border text-foreground text-xs text-center"
+              title="Размер шрифта"
             />
-          </div>
-          <div className="flex-1">
-            <Label className="text-xs text-muted-foreground">Высота строки</Label>
+            <span className="text-muted-foreground text-xs">/</span>
             <Input
               type="number"
               value={titleLineHeight}
               onChange={(e) => setTitleLineHeight(Number(e.target.value))}
               min={12}
               max={60}
-              className="h-8 bg-input border-border text-foreground"
+              className="w-14 h-7 bg-input border-border text-foreground text-xs text-center"
+              title="Высота строки"
             />
           </div>
         </div>
+        <Textarea
+          placeholder="Впишите ваш заголовок"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          maxLength={200}
+          rows={2}
+          className="resize-none bg-input border-border text-foreground placeholder:text-muted-foreground"
+        />
       </div>
 
       {/* Subtitle input */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-foreground">Подзаголовок</Label>
-        <Textarea
-          placeholder="Впишите ваш подзаголовок"
-          value={subtitle}
-          onChange={(e) => setSubtitle(e.target.value)}
-          maxLength={200}
-          className="resize-none bg-input border-border text-foreground placeholder:text-muted-foreground min-h-[70px]"
-        />
-        <div className="flex gap-4 mt-2">
-          <div className="flex-1">
-            <Label className="text-xs text-muted-foreground">Размер</Label>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium text-foreground">Подзаголовок</Label>
+          <div className="flex gap-2 items-center">
             <Input
               type="number"
               value={subtitleFontSize}
               onChange={(e) => setSubtitleFontSize(Number(e.target.value))}
               min={10}
               max={36}
-              className="h-8 bg-input border-border text-foreground"
+              className="w-14 h-7 bg-input border-border text-foreground text-xs text-center"
+              title="Размер шрифта"
             />
-          </div>
-          <div className="flex-1">
-            <Label className="text-xs text-muted-foreground">Высота строки</Label>
+            <span className="text-muted-foreground text-xs">/</span>
             <Input
               type="number"
               value={subtitleLineHeight}
               onChange={(e) => setSubtitleLineHeight(Number(e.target.value))}
               min={10}
               max={48}
-              className="h-8 bg-input border-border text-foreground"
+              className="w-14 h-7 bg-input border-border text-foreground text-xs text-center"
+              title="Высота строки"
             />
           </div>
         </div>
+        <Textarea
+          placeholder="Впишите ваш подзаголовок"
+          value={subtitle}
+          onChange={(e) => setSubtitle(e.target.value)}
+          maxLength={200}
+          rows={2}
+          className="resize-none bg-input border-border text-foreground placeholder:text-muted-foreground"
+        />
+      </div>
+
+      {/* Image prompt */}
+      <div className="space-y-1.5">
+        <Label className="text-sm font-medium text-foreground">
+          Опишите изображение для баннера
+        </Label>
+        <Textarea
+          placeholder="Промт для изображения"
+          value={imagePrompt}
+          onChange={(e) => setImagePrompt(e.target.value)}
+          rows={3}
+          className="resize-none bg-input border-border text-foreground placeholder:text-muted-foreground"
+        />
       </div>
 
       {/* Image prompt */}
