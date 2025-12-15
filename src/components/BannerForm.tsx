@@ -27,10 +27,14 @@ interface BannerFormProps {
   setTitleFontSize: (value: number) => void;
   titleLineHeight: number;
   setTitleLineHeight: (value: number) => void;
+  titleColor: string;
+  setTitleColor: (value: string) => void;
   subtitleFontSize: number;
   setSubtitleFontSize: (value: number) => void;
   subtitleLineHeight: number;
   setSubtitleLineHeight: (value: number) => void;
+  subtitleColor: string;
+  setSubtitleColor: (value: string) => void;
   textAlignment: TextAlignment;
   setTextAlignment: (value: TextAlignment) => void;
 }
@@ -54,10 +58,14 @@ export const BannerForm = ({
   setTitleFontSize,
   titleLineHeight,
   setTitleLineHeight,
+  titleColor,
+  setTitleColor,
   subtitleFontSize,
   setSubtitleFontSize,
   subtitleLineHeight,
   setSubtitleLineHeight,
+  subtitleColor,
+  setSubtitleColor,
   textAlignment,
   setTextAlignment,
 }: BannerFormProps) => {
@@ -99,6 +107,13 @@ export const BannerForm = ({
         <div className="flex items-center justify-between">
           <Label className="text-sm font-medium text-foreground">Заголовок</Label>
           <div className="flex gap-2 items-center">
+            <input
+              type="color"
+              value={titleColor}
+              onChange={(e) => setTitleColor(e.target.value)}
+              className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0"
+              title="Цвет текста"
+            />
             <Input
               type="number"
               value={titleFontSize}
@@ -135,6 +150,13 @@ export const BannerForm = ({
         <div className="flex items-center justify-between">
           <Label className="text-sm font-medium text-foreground">Подзаголовок</Label>
           <div className="flex gap-2 items-center">
+            <input
+              type="color"
+              value={subtitleColor}
+              onChange={(e) => setSubtitleColor(e.target.value)}
+              className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0"
+              title="Цвет текста"
+            />
             <Input
               type="number"
               value={subtitleFontSize}

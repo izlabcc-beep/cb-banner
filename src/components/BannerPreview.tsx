@@ -10,8 +10,10 @@ interface BannerPreviewProps {
   scale?: number;
   titleFontSize: number;
   titleLineHeight: number;
+  titleColor: string;
   subtitleFontSize: number;
   subtitleLineHeight: number;
+  subtitleColor: string;
   textAlignment: TextAlignment;
 }
 
@@ -25,8 +27,10 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
     scale = 1,
     titleFontSize,
     titleLineHeight,
+    titleColor,
     subtitleFontSize,
     subtitleLineHeight,
+    subtitleColor,
     textAlignment,
   }, ref) => {
     const baseWidth = 640;
@@ -79,24 +83,26 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
           }}
         >
           <h2
-            className="font-bold text-foreground leading-tight"
+            className="font-bold leading-tight"
             style={{
               fontSize: titleFontSize * scale,
               lineHeight: `${titleLineHeight * scale}px`,
               marginBottom: 8 * scale,
               fontFamily: "'Euclid Circular A', 'Inter', sans-serif",
               fontWeight: 700,
+              color: titleColor,
             }}
           >
             {renderTextWithBreaks(title, "Заголовок вашего баннера\nнаписаный в пару строк")}
           </h2>
           <p
-            className="text-foreground/80"
             style={{
               fontSize: subtitleFontSize * scale,
               lineHeight: `${subtitleLineHeight * scale}px`,
               fontFamily: "'Euclid Circular A', 'Inter', sans-serif",
               fontWeight: 400,
+              color: subtitleColor,
+              opacity: 0.8,
             }}
           >
             {renderTextWithBreaks(subtitle, "Подзаголовок для информации\nдополнительной в пару строк")}
