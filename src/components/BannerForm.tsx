@@ -180,18 +180,6 @@ export const BannerForm = ({
         />
       </div>
 
-      {/* Image prompt */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-foreground">
-          Опишите изображение для баннера
-        </Label>
-        <Textarea
-          placeholder="Промт для изображения"
-          value={imagePrompt}
-          onChange={(e) => setImagePrompt(e.target.value)}
-          className="resize-none bg-input border-border text-foreground placeholder:text-muted-foreground min-h-[100px]"
-        />
-      </div>
 
       {/* Generate button */}
       <Button
