@@ -112,7 +112,7 @@ export const BannerForm = ({
             onChange={(e) => setTextGap(Number(e.target.value))}
             min={0}
             max={48}
-            className="w-14 h-7 bg-input border-border text-foreground text-xs text-center"
+            className="w-16 h-7 bg-input border-border text-foreground text-xs text-center"
             title="Отступ между заголовком и подзаголовком"
           />
         </div>
@@ -136,7 +136,7 @@ export const BannerForm = ({
               onChange={(e) => setTitleFontSize(Number(e.target.value))}
               min={12}
               max={48}
-              className="w-14 h-7 bg-input border-border text-foreground text-xs text-center"
+              className="w-16 h-7 bg-input border-border text-foreground text-xs text-center"
               title="Размер шрифта"
             />
             <span className="text-muted-foreground text-xs">/</span>
@@ -146,7 +146,7 @@ export const BannerForm = ({
               onChange={(e) => setTitleLineHeight(Number(e.target.value))}
               min={12}
               max={60}
-              className="w-14 h-7 bg-input border-border text-foreground text-xs text-center"
+              className="w-16 h-7 bg-input border-border text-foreground text-xs text-center"
               title="Высота строки"
             />
           </div>
@@ -179,7 +179,7 @@ export const BannerForm = ({
               onChange={(e) => setSubtitleFontSize(Number(e.target.value))}
               min={10}
               max={36}
-              className="w-14 h-7 bg-input border-border text-foreground text-xs text-center"
+              className="w-16 h-7 bg-input border-border text-foreground text-xs text-center"
               title="Размер шрифта"
             />
             <span className="text-muted-foreground text-xs">/</span>
@@ -189,7 +189,7 @@ export const BannerForm = ({
               onChange={(e) => setSubtitleLineHeight(Number(e.target.value))}
               min={10}
               max={48}
-              className="w-14 h-7 bg-input border-border text-foreground text-xs text-center"
+              className="w-16 h-7 bg-input border-border text-foreground text-xs text-center"
               title="Высота строки"
             />
           </div>
