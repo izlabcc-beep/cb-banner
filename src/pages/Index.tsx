@@ -18,8 +18,10 @@ const Index = () => {
   // Typography settings
   const [titleFontSize, setTitleFontSize] = useState(28);
   const [titleLineHeight, setTitleLineHeight] = useState(32);
+  const [titleColor, setTitleColor] = useState("#FFFFFF");
   const [subtitleFontSize, setSubtitleFontSize] = useState(14);
   const [subtitleLineHeight, setSubtitleLineHeight] = useState(18);
+  const [subtitleColor, setSubtitleColor] = useState("#FFFFFF");
   const [textAlignment, setTextAlignment] = useState<TextAlignment>("center");
 
   const bannerRef = useRef<HTMLDivElement>(null);
@@ -96,10 +98,14 @@ const Index = () => {
               setTitleFontSize={setTitleFontSize}
               titleLineHeight={titleLineHeight}
               setTitleLineHeight={setTitleLineHeight}
+              titleColor={titleColor}
+              setTitleColor={setTitleColor}
               subtitleFontSize={subtitleFontSize}
               setSubtitleFontSize={setSubtitleFontSize}
               subtitleLineHeight={subtitleLineHeight}
               setSubtitleLineHeight={setSubtitleLineHeight}
+              subtitleColor={subtitleColor}
+              setSubtitleColor={setSubtitleColor}
               textAlignment={textAlignment}
               setTextAlignment={setTextAlignment}
             />
@@ -118,8 +124,10 @@ const Index = () => {
                 imageUrl={generatedImage}
                 titleFontSize={titleFontSize}
                 titleLineHeight={titleLineHeight}
+                titleColor={titleColor}
                 subtitleFontSize={subtitleFontSize}
                 subtitleLineHeight={subtitleLineHeight}
+                subtitleColor={subtitleColor}
                 textAlignment={textAlignment}
               />
             </div>
