@@ -8,8 +8,8 @@ import html2canvas from "html2canvas";
 const Index = () => {
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
-  const [backgroundColor, setBackgroundColor] = useState("#00A3FF");
-  const [gradientEnd, setGradientEnd] = useState("#0066CC");
+  const [backgroundColor, setBackgroundColor] = useState("#0065FF");
+  const [gradientEnd, setGradientEnd] = useState("#3F99FF");
   const [useGradient, setUseGradient] = useState(true);
   const [imagePrompt, setImagePrompt] = useState("");
   const [generatedImage, setGeneratedImage] = useState<string | undefined>();
@@ -19,10 +19,11 @@ const Index = () => {
   const [titleFontSize, setTitleFontSize] = useState(28);
   const [titleLineHeight, setTitleLineHeight] = useState(32);
   const [titleColor, setTitleColor] = useState("#FFFFFF");
-  const [subtitleFontSize, setSubtitleFontSize] = useState(14);
-  const [subtitleLineHeight, setSubtitleLineHeight] = useState(18);
+  const [subtitleFontSize, setSubtitleFontSize] = useState(24);
+  const [subtitleLineHeight, setSubtitleLineHeight] = useState(28);
   const [subtitleColor, setSubtitleColor] = useState("#FFFFFF");
-  const [textAlignment, setTextAlignment] = useState<TextAlignment>("center");
+  const [textAlignment, setTextAlignment] = useState<TextAlignment>("start");
+  const [textGap, setTextGap] = useState(8);
 
   const bannerRef = useRef<HTMLDivElement>(null);
 
@@ -108,6 +109,8 @@ const Index = () => {
               setSubtitleColor={setSubtitleColor}
               textAlignment={textAlignment}
               setTextAlignment={setTextAlignment}
+              textGap={textGap}
+              setTextGap={setTextGap}
             />
           </div>
 
@@ -129,6 +132,7 @@ const Index = () => {
                 subtitleLineHeight={subtitleLineHeight}
                 subtitleColor={subtitleColor}
                 textAlignment={textAlignment}
+                textGap={textGap}
               />
             </div>
 

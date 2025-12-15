@@ -15,6 +15,7 @@ interface BannerPreviewProps {
   subtitleLineHeight: number;
   subtitleColor: string;
   textAlignment: TextAlignment;
+  textGap: number;
 }
 
 export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
@@ -32,6 +33,7 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
     subtitleLineHeight,
     subtitleColor,
     textAlignment,
+    textGap,
   }, ref) => {
     const baseWidth = 640;
     const baseHeight = 168;
@@ -87,7 +89,7 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
             style={{
               fontSize: titleFontSize * scale,
               lineHeight: `${titleLineHeight * scale}px`,
-              marginBottom: 8 * scale,
+              marginBottom: textGap * scale,
               fontFamily: "'Euclid Circular A', 'Inter', sans-serif",
               fontWeight: 700,
               color: titleColor,
