@@ -8,13 +8,14 @@ import html2canvas from "html2canvas";
 const Index = () => {
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
-  const [gradient, setGradient] = useState("blue");
+  const [backgroundColor, setBackgroundColor] = useState("#00A3FF");
+  const [gradientEnd, setGradientEnd] = useState("#0066CC");
+  const [useGradient, setUseGradient] = useState(true);
   const [imagePrompt, setImagePrompt] = useState("");
   const [generatedImage, setGeneratedImage] = useState<string | undefined>();
   const [isGenerating, setIsGenerating] = useState(false);
 
   const bannerRef = useRef<HTMLDivElement>(null);
-  const downloadBannerRef = useRef<HTMLDivElement>(null);
 
   const handleGenerate = async () => {
     if (!imagePrompt.trim()) {
@@ -25,7 +26,6 @@ const Index = () => {
     setIsGenerating(true);
     
     // TODO: Connect to AI image generation
-    // For now, simulate generation delay
     await new Promise((resolve) => setTimeout(resolve, 2000));
     
     toast.success("Баннер сгенерирован! (AI-изображение будет добавлено позже)");
@@ -36,18 +36,6 @@ const Index = () => {
     if (!bannerRef.current) return;
 
     try {
-      // Create a temporary container for the scaled banner
-      const tempContainer = document.createElement("div");
-      tempContainer.style.position = "absolute";
-      tempContainer.style.left = "-9999px";
-      tempContainer.style.top = "0";
-      document.body.appendChild(tempContainer);
-
-      // Create the scaled banner
-      const scaledBanner = document.createElement("div");
-      tempContainer.appendChild(scaledBanner);
-
-      // Use html2canvas on the actual banner
       const canvas = await html2canvas(bannerRef.current, {
         scale: scale,
         useCORS: true,
@@ -56,10 +44,6 @@ const Index = () => {
         height: 168,
       });
 
-      // Clean up
-      document.body.removeChild(tempContainer);
-
-      // Download
       const link = document.createElement("a");
       link.download = `banner-${scale}x.png`;
       link.href = canvas.toDataURL("image/png");
@@ -91,8 +75,12 @@ const Index = () => {
               setTitle={setTitle}
               subtitle={subtitle}
               setSubtitle={setSubtitle}
-              gradient={gradient}
-              setGradient={setGradient}
+              backgroundColor={backgroundColor}
+              setBackgroundColor={setBackgroundColor}
+              gradientEnd={gradientEnd}
+              setGradientEnd={setGradientEnd}
+              useGradient={useGradient}
+              setUseGradient={setUseGradient}
               imagePrompt={imagePrompt}
               setImagePrompt={setImagePrompt}
               onGenerate={handleGenerate}
@@ -108,7 +96,8 @@ const Index = () => {
                 ref={bannerRef}
                 title={title}
                 subtitle={subtitle}
-                gradient={gradient}
+                backgroundColor={backgroundColor}
+                gradientEnd={useGradient ? gradientEnd : undefined}
                 imageUrl={generatedImage}
               />
             </div>
