@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { BannerForm } from "@/components/BannerForm";
+import { BannerForm, TextAlignment } from "@/components/BannerForm";
 import { BannerPreview } from "@/components/BannerPreview";
 import { DownloadButtons } from "@/components/DownloadButtons";
 import { toast } from "sonner";
@@ -14,6 +14,13 @@ const Index = () => {
   const [imagePrompt, setImagePrompt] = useState("");
   const [generatedImage, setGeneratedImage] = useState<string | undefined>();
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Typography settings
+  const [titleFontSize, setTitleFontSize] = useState(28);
+  const [titleLineHeight, setTitleLineHeight] = useState(32);
+  const [subtitleFontSize, setSubtitleFontSize] = useState(14);
+  const [subtitleLineHeight, setSubtitleLineHeight] = useState(18);
+  const [textAlignment, setTextAlignment] = useState<TextAlignment>("center");
 
   const bannerRef = useRef<HTMLDivElement>(null);
 
@@ -85,6 +92,16 @@ const Index = () => {
               setImagePrompt={setImagePrompt}
               onGenerate={handleGenerate}
               isGenerating={isGenerating}
+              titleFontSize={titleFontSize}
+              setTitleFontSize={setTitleFontSize}
+              titleLineHeight={titleLineHeight}
+              setTitleLineHeight={setTitleLineHeight}
+              subtitleFontSize={subtitleFontSize}
+              setSubtitleFontSize={setSubtitleFontSize}
+              subtitleLineHeight={subtitleLineHeight}
+              setSubtitleLineHeight={setSubtitleLineHeight}
+              textAlignment={textAlignment}
+              setTextAlignment={setTextAlignment}
             />
           </div>
 
@@ -99,6 +116,11 @@ const Index = () => {
                 backgroundColor={backgroundColor}
                 gradientEnd={useGradient ? gradientEnd : undefined}
                 imageUrl={generatedImage}
+                titleFontSize={titleFontSize}
+                titleLineHeight={titleLineHeight}
+                subtitleFontSize={subtitleFontSize}
+                subtitleLineHeight={subtitleLineHeight}
+                textAlignment={textAlignment}
               />
             </div>
 
