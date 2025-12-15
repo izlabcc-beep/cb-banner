@@ -37,6 +37,8 @@ interface BannerFormProps {
   setSubtitleColor: (value: string) => void;
   textAlignment: TextAlignment;
   setTextAlignment: (value: TextAlignment) => void;
+  textGap: number;
+  setTextGap: (value: number) => void;
 }
 
 export const BannerForm = ({
@@ -68,6 +70,8 @@ export const BannerForm = ({
   setSubtitleColor,
   textAlignment,
   setTextAlignment,
+  textGap,
+  setTextGap,
 }: BannerFormProps) => {
   return (
     <div className="space-y-4">
@@ -100,6 +104,18 @@ export const BannerForm = ({
             <AlignVerticalJustifyEnd className="h-4 w-4" />
           </ToggleGroupItem>
         </ToggleGroup>
+        <div className="flex items-center gap-1 ml-auto">
+          <Label className="text-xs text-muted-foreground">Отступ</Label>
+          <Input
+            type="number"
+            value={textGap}
+            onChange={(e) => setTextGap(Number(e.target.value))}
+            min={0}
+            max={48}
+            className="w-14 h-7 bg-input border-border text-foreground text-xs text-center"
+            title="Отступ между заголовком и подзаголовком"
+          />
+        </div>
       </div>
 
       {/* Title input */}
