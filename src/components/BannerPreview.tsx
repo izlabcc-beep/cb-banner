@@ -14,17 +14,21 @@ interface BannerPreviewProps {
   subtitleFontSize: number;
   subtitleLineHeight: number;
   subtitleColor: string;
+  hasSubtitleBackground?: boolean;
+  subtitleBackgroundColor?: string;
+  subtitleRotation?: number;
+  subtitleIsBold?: boolean;
   textAlignment: TextAlignment;
   textGap: number;
 }
 
 export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
-  ({ 
-    title, 
-    subtitle, 
-    backgroundColor, 
-    gradientEnd, 
-    imageUrl, 
+  ({
+    title,
+    subtitle,
+    backgroundColor,
+    gradientEnd,
+    imageUrl,
     scale = 1,
     titleFontSize,
     titleLineHeight,
@@ -32,6 +36,10 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
     subtitleFontSize,
     subtitleLineHeight,
     subtitleColor,
+    hasSubtitleBackground,
+    subtitleBackgroundColor,
+    subtitleRotation = 0,
+    subtitleIsBold = false,
     textAlignment,
     textGap,
   }, ref) => {
@@ -56,10 +64,10 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
       ));
     };
 
-    const justifyContent = textAlignment === "start" 
-      ? "flex-start" 
-      : textAlignment === "end" 
-        ? "flex-end" 
+    const justifyContent = textAlignment === "start"
+      ? "flex-start"
+      : textAlignment === "end"
+        ? "flex-end"
         : "center";
 
     return (
@@ -75,6 +83,7 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
       >
         {/* Text content */}
         <div
+          data-text-container
           className="absolute inset-0 flex flex-col"
           style={{
             justifyContent,
@@ -85,30 +94,45 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
           }}
         >
           <h2
-            className="font-bold leading-tight"
+            className=""
             style={{
               fontSize: titleFontSize * scale,
               lineHeight: `${titleLineHeight * scale}px`,
               marginBottom: textGap * scale,
               fontFamily: "'Euclid Circular A', 'Inter', sans-serif",
-              fontWeight: 700,
+              fontWeight: 600,
               color: titleColor,
             }}
           >
-            {renderTextWithBreaks(title, "Заголовок вашего баннера\nнаписаный в пару строк")}
+            {renderTextWithBreaks(title, "")}
           </h2>
-          <p
+          <div
             style={{
-              fontSize: subtitleFontSize * scale,
-              lineHeight: `${subtitleLineHeight * scale}px`,
-              fontFamily: "'Euclid Circular A', 'Inter', sans-serif",
-              fontWeight: 400,
-              color: subtitleColor,
-              opacity: 0.8,
+              backgroundColor: hasSubtitleBackground ? subtitleBackgroundColor : 'transparent',
+              paddingTop: hasSubtitleBackground ? `${8 * scale}px` : 0,
+              paddingBottom: hasSubtitleBackground ? `${8 * scale}px` : 0,
+              paddingLeft: hasSubtitleBackground ? `${12 * scale}px` : 0,
+              paddingRight: hasSubtitleBackground ? `${12 * scale}px` : 0,
+              borderRadius: `${16 * scale}px`,
+              display: 'inline-block',
+              width: 'fit-content',
+              transform: hasSubtitleBackground ? `rotate(${subtitleRotation}deg)` : 'none',
+              transition: 'transform 0.2s ease-in-out',
             }}
           >
-            {renderTextWithBreaks(subtitle, "Подзаголовок для информации\nдополнительной в пару строк")}
-          </p>
+            <p
+              style={{
+                fontSize: subtitleFontSize * scale,
+                lineHeight: `${subtitleLineHeight * scale}px`,
+                fontFamily: "'Euclid Circular A', 'Inter', sans-serif",
+                fontWeight: subtitleIsBold ? 600 : 400,
+                color: subtitleColor,
+                margin: 0,
+              }}
+            >
+              {renderTextWithBreaks(subtitle, "")}
+            </p>
+          </div>
         </div>
 
         {/* Image area - full bleed */}

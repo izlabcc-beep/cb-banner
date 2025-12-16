@@ -11,10 +11,7 @@ interface ColorPickerProps {
   setUseGradient: (value: boolean) => void;
 }
 
-const presetColors = [
-  "#00A3FF", "#8B5CF6", "#10B981", "#F97316",
-  "#EC4899", "#1E293B", "#EF4444", "#FBBF24",
-];
+
 
 const normalizeColor = (value: string): string => {
   const cleaned = value.trim();
@@ -55,20 +52,8 @@ export const ColorPicker = ({
           />
         </div>
       </div>
-      
-      {/* Preset colors */}
-      <div className="flex flex-wrap gap-1.5">
-        {presetColors.map((color) => (
-          <button
-            key={color}
-            onClick={() => setBackgroundColor(color)}
-            className={`w-7 h-7 rounded-md border-2 transition-all ${
-              backgroundColor === color ? "border-foreground scale-110" : "border-transparent"
-            }`}
-            style={{ backgroundColor: color }}
-          />
-        ))}
-      </div>
+
+
 
       {/* Color inputs in a row */}
       <div className="flex gap-2">
