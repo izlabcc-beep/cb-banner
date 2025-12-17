@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import type { TextAlignment } from "./BannerForm";
 
-interface BannerPreviewProps {
+export interface BannerPreviewProps {
   title: string;
   subtitle: string;
   backgroundColor: string;
@@ -20,6 +20,11 @@ interface BannerPreviewProps {
   subtitleIsBold?: boolean;
   textAlignment: TextAlignment;
   textGap: number;
+  imageScale?: number;
+  imagePanX?: number;
+  imagePanY?: number;
+  imageFlipX?: boolean;
+  isUpload?: boolean;
 }
 
 export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
@@ -42,6 +47,11 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
     subtitleIsBold = false,
     textAlignment,
     textGap,
+    imageScale = 1,
+    imagePanX = 0,
+    imagePanY = 0,
+    imageFlipX = false,
+    isUpload = false,
   }, ref) => {
     const baseWidth = 640;
     const baseHeight = 168;
@@ -84,7 +94,7 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
         {/* Text content */}
         <div
           data-text-container
-          className="absolute inset-0 flex flex-col"
+          className="absolute inset-0 flex flex-col z-10"
           style={{
             justifyContent,
             paddingRight: imageAreaWidth * scale,
@@ -113,7 +123,7 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
               paddingBottom: hasSubtitleBackground ? `${8 * scale}px` : 0,
               paddingLeft: hasSubtitleBackground ? `${12 * scale}px` : 0,
               paddingRight: hasSubtitleBackground ? `${12 * scale}px` : 0,
-              borderRadius: `${16 * scale}px`,
+              borderRadius: `${12 * scale}px`,
               display: 'inline-block',
               width: 'fit-content',
               transform: hasSubtitleBackground ? `rotate(${subtitleRotation}deg)` : 'none',
@@ -137,7 +147,7 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
 
         {/* Image area - full bleed */}
         <div
-          className="absolute right-0 top-0 bottom-0 flex items-center justify-center overflow-hidden"
+          className="absolute right-0 top-0 bottom-0 flex items-center justify-center"
           style={{
             width: imageAreaWidth * scale,
             height: baseHeight * scale,
@@ -147,7 +157,15 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
             <img
               src={imageUrl}
               alt="Banner illustration"
-              className="w-full h-full object-contain object-center"
+              className={`transition-transform duration-100 ease-out ${isUpload
+                ? "absolute left-1/2 top-1/2 max-w-none h-auto w-auto"
+                : "w-full h-full object-contain object-center"
+                }`}
+              style={{
+                transform: isUpload
+                  ? `translate(-50%, -50%) scale(${imageScale}) ${imageFlipX ? 'scaleX(-1)' : ''} translate(${imagePanX}px, ${imagePanY}px)`
+                  : `scale(${imageScale}) ${imageFlipX ? 'scaleX(-1)' : ''} translate(${imagePanX}px, ${imagePanY}px)`,
+              }}
             />
           ) : (
             <div

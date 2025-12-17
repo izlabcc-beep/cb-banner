@@ -2,11 +2,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, RotateCcw, RotateCw, X, Bold } from "lucide-react";
+import { Loader2, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, RotateCcw, RotateCw, X, Bold, Upload, Trash2 } from "lucide-react";
 import { ColorPicker } from "./ColorPicker";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Slider } from "@/components/ui/slider";
 
 export type TextAlignment = "start" | "center" | "end";
 
@@ -50,6 +52,19 @@ interface BannerFormProps {
   textGap: number;
   setTextGap: (value: number) => void;
   onReset: () => void;
+  activeTab: "generate" | "upload";
+  setActiveTab: (value: "generate" | "upload") => void;
+  onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  uploadedImage?: string;
+  onRemoveImage?: () => void;
+  imageScale: number;
+  setImageScale: (value: number) => void;
+  imagePanX: number;
+  setImagePanX: (value: number) => void;
+  imagePanY: number;
+  setImagePanY: (value: number) => void;
+  imageFlipX: boolean;
+  setImageFlipX: (value: boolean) => void;
 }
 
 export const BannerForm = ({
@@ -92,6 +107,19 @@ export const BannerForm = ({
   textGap,
   setTextGap,
   onReset,
+  activeTab,
+  setActiveTab,
+  onFileUpload,
+  uploadedImage,
+  onRemoveImage,
+  imageScale,
+  setImageScale,
+  imagePanX,
+  setImagePanX,
+  imagePanY,
+  setImagePanY,
+  imageFlipX,
+  setImageFlipX,
 }: BannerFormProps) => {
   return (
     <div className="flex flex-col gap-4">
@@ -372,57 +400,152 @@ export const BannerForm = ({
 
       <Separator />
 
-      {/* Image prompt */}
-      <div className="space-y-1.5">
-        <Label className="text-sm font-medium text-foreground">
-          Опишите изображение для баннера
-        </Label>
-        <Textarea
-          placeholder="Промт для изображения"
-          value={imagePrompt}
-          onChange={(e) => {
-            setImagePrompt(e.target.value);
-            e.target.style.height = 'auto';
-            e.target.style.height = `${e.target.scrollHeight}px`;
-          }}
-          onInput={(e) => {
-            const target = e.target as HTMLTextAreaElement;
-            target.style.height = 'auto';
-            target.style.height = `${target.scrollHeight}px`;
-          }}
-          rows={1}
-          className="min-h-[40px] resize-none bg-input border-border text-foreground placeholder:text-muted-foreground overflow-hidden"
-        />
-      </div>
+      {/* Image Tabs */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "generate" | "upload")}>
+        <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsTrigger value="generate">Сгенерировать</TabsTrigger>
+          <TabsTrigger value="upload">Загрузить</TabsTrigger>
+        </TabsList>
+        <TabsContent value="generate" className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="prompt">Описание изображения</Label>
+            <Textarea
+              id="prompt"
+              placeholder="Опишите, что должно быть на фоне баннера..."
+              value={imagePrompt}
+              onChange={(e) => setImagePrompt(e.target.value)}
+              className="resize-none"
+              rows={3}
+            />
+          </div>
 
+          <Button
+            onClick={onGenerate}
+            disabled={isGenerating || !imagePrompt}
+            className="w-full h-12 font-semibold rounded-full transition-all duration-200"
+          >
+            {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isGenerating ? "Генерация..." : "Сгенерировать"}
+          </Button>
+        </TabsContent>
+        <TabsContent value="upload" className="space-y-4">
+          <div className="flex items-center justify-center w-full">
+            <Label
+              htmlFor="upload-file"
+              className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors relative"
+            >
+              {uploadedImage ? (
+                <>
+                  <div className="absolute inset-0 w-full h-full opacity-10 bg-center bg-cover rounded-lg" style={{ backgroundImage: `url(${uploadedImage})` }} />
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6 z-10">
+                    <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
+                    <p className="mb-1 text-sm text-foreground font-medium">
+                      Нажмите чтобы заменить
+                    </p>
+                    <p className="text-xs text-muted-foreground">PNG, JPG or WEBP</p>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <Upload className="w-8 h-8 mb-3 text-muted-foreground" />
+                  <p className="mb-2 text-sm text-muted-foreground">
+                    <span className="font-semibold">Нажмите для загрузки</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">PNG, JPG or WEBP</p>
+                </div>
+              )}
+              <Input
+                id="upload-file"
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={onFileUpload}
+              />
+            </Label>
+          </div>
 
-      <div className="flex flex-col gap-1">
-        {/* Generate button */}
-        <Button
-          onClick={onGenerate}
-          disabled={isGenerating}
-          className="w-full h-12 font-semibold rounded-full transition-all duration-200"
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              Генерация...
-            </>
-          ) : (
-            "Сгенерировать"
+          {uploadedImage && (
+            <Button
+              variant="destructive"
+              onClick={onRemoveImage}
+              className="w-full"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Удалить изображение
+            </Button>
           )}
-        </Button>
+        </TabsContent>
+      </Tabs>
 
-        {/* Reset button */}
-        <Button
-          variant="outline"
-          onClick={onReset}
-          disabled={isGenerating}
-          className="w-full h-12 font-semibold rounded-full transition-all duration-200"
-        >
-          Очистить форму
-        </Button>
+      {/* Image Adjustments */}
+      <div className="space-y-4 pt-2">
+        <div className="space-y-2">
+          <div className="flex justify-between items-center text-sm">
+            <Label>Масштаб изображения</Label>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={imageFlipX ? "default" : "outline"}
+                size="sm"
+                onClick={() => setImageFlipX(!imageFlipX)}
+                className="h-7 px-2 text-xs"
+              >
+                Отразить
+              </Button>
+              <span className="text-muted-foreground text-xs">{imageScale.toFixed(2)}x</span>
+            </div>
+          </div>
+          <Slider
+            value={[imageScale]}
+            onValueChange={(value) => setImageScale(value[0])}
+            min={0.05}
+            max={3}
+            step={0.05}
+            className="w-full"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-sm">
+              <Label>Позиция по X</Label>
+              <span className="text-muted-foreground text-xs">{imagePanX}px</span>
+            </div>
+            <Slider
+              value={[imagePanX]}
+              onValueChange={(value) => setImagePanX(value[0])}
+              min={-200}
+              max={200}
+              step={1}
+              className="w-full"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-sm">
+              <Label>Позиция по Y</Label>
+              <span className="text-muted-foreground text-xs">{imagePanY}px</span>
+            </div>
+            <Slider
+              value={[imagePanY]}
+              onValueChange={(value) => setImagePanY(value[0])}
+              min={-200}
+              max={200}
+              step={1}
+              className="w-full"
+            />
+          </div>
+        </div>
       </div>
+
+      <Button
+        variant="outline"
+        onClick={onReset}
+        disabled={isGenerating}
+        className="w-full h-12 font-semibold rounded-full transition-all duration-200"
+      >
+        Очистить форму
+      </Button>
     </div>
+
   );
 };

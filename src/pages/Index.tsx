@@ -1,7 +1,7 @@
-
 import { useState, useRef, useCallback, useEffect } from "react";
 import { BannerForm, TextAlignment } from "@/components/BannerForm";
-import { BannerPreview } from "@/components/BannerPreview";
+import { BannerPreview, BannerPreviewProps } from "@/components/BannerPreview";
+import { generateImage } from "@/services/imageService";
 import { DownloadButtons } from "@/components/DownloadButtons";
 import { toast } from "sonner";
 import { toPng } from "html-to-image";
@@ -27,6 +27,14 @@ const Index = () => {
     subtitleIsBold: false,
     textAlignment: "start" as TextAlignment,
     textGap: 8,
+    generatedImageScale: 1,
+    generatedImagePanX: 0,
+    generatedImagePanY: 0,
+    generatedImageFlipX: false,
+    uploadedImageScale: 1,
+    uploadedImagePanX: 0,
+    uploadedImagePanY: 0,
+    uploadedImageFlipX: false,
   };
 
   // Load state from localStorage or use defaults
@@ -53,6 +61,18 @@ const Index = () => {
   // Non-persisted state
   const [generatedImage, setGeneratedImage] = useState<string | undefined>();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [activeTab, setActiveTab] = useState<"generate" | "upload">("generate");
+  const [uploadedImage, setUploadedImage] = useState<string | undefined>();
+
+  // Image adjustments - separate for generated and uploaded
+  const [generatedImageScale, setGeneratedImageScale] = useState(state.generatedImageScale || 1);
+  const [generatedImagePanX, setGeneratedImagePanX] = useState(state.generatedImagePanX || 0);
+  const [generatedImagePanY, setGeneratedImagePanY] = useState(state.generatedImagePanY || 0);
+  const [generatedImageFlipX, setGeneratedImageFlipX] = useState(state.generatedImageFlipX || false);
+  const [uploadedImageScale, setUploadedImageScale] = useState(state.uploadedImageScale || 1);
+  const [uploadedImagePanX, setUploadedImagePanX] = useState(state.uploadedImagePanX || 0);
+  const [uploadedImagePanY, setUploadedImagePanY] = useState(state.uploadedImagePanY || 0);
+  const [uploadedImageFlipX, setUploadedImageFlipX] = useState(state.uploadedImageFlipX || false);
 
   // Typography settings
   const [titleFontSize, setTitleFontSize] = useState(state.titleFontSize);
@@ -89,13 +109,22 @@ const Index = () => {
       subtitleIsBold,
       textAlignment,
       textGap,
+      generatedImageScale,
+      generatedImagePanX,
+      generatedImagePanY,
+      generatedImageFlipX,
+      uploadedImageScale,
+      uploadedImagePanX,
+      uploadedImagePanY,
+      uploadedImageFlipX,
     };
     localStorage.setItem("banner-state", JSON.stringify(stateToSave));
   }, [
     title, subtitle, backgroundColor, gradientEnd, useGradient, imagePrompt,
     titleFontSize, titleLineHeight, titleColor, subtitleFontSize, subtitleLineHeight, subtitleColor,
     hasSubtitleBackground, subtitleBackgroundColor, subtitleRotation, subtitleIsBold,
-    textAlignment, textGap
+    textAlignment, textGap, generatedImageScale, generatedImagePanX, generatedImagePanY, generatedImageFlipX,
+    uploadedImageScale, uploadedImagePanX, uploadedImagePanY, uploadedImageFlipX
   ]);
 
   const handleReset = () => {
@@ -117,31 +146,81 @@ const Index = () => {
     setSubtitleIsBold(DEFAULT_STATE.subtitleIsBold);
     setTextAlignment(DEFAULT_STATE.textAlignment);
     setTextGap(DEFAULT_STATE.textGap);
+    setGeneratedImageScale(1);
+    setGeneratedImagePanX(0);
+    setGeneratedImagePanY(0);
+    setGeneratedImageFlipX(false);
+    setUploadedImageScale(1);
+    setUploadedImagePanX(0);
+    setUploadedImagePanY(0);
+    setUploadedImageFlipX(false);
 
     if (generatedImage) {
       // confirm reset logic if needed, but for now we keep the image
       // or we can clear it: setGeneratedImage(undefined);
     }
+    setUploadedImage(undefined);
+    setActiveTab("generate");
   };
-
-  const bannerRef = useRef<HTMLDivElement>(null);
 
   const handleGenerate = async () => {
     if (!imagePrompt) return;
 
     setIsGenerating(true);
+    toast.loading("Генерация изображения...", { id: "generate" });
+
     try {
-      // Simulated generation delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      // In a real app, this would call an API
-      // For now we just use a placeholder based on the prompt
-      setGeneratedImage(`https://source.unsplash.com/random/800x400/?${encodeURIComponent(imagePrompt)}`);
+      const imageUrl = await generateImage(imagePrompt);
+      setGeneratedImage(imageUrl);
+      setActiveTab("generate");
+      toast.success("Изображение готово!", { id: "generate" });
+
+      // Auto-scale generated image
+      const img = new Image();
+      img.onload = () => {
+        const BANNER_HEIGHT = 168;
+        // Calculate scale to match banner height
+        const scale = BANNER_HEIGHT / img.naturalHeight;
+        setGeneratedImageScale(scale);
+        setGeneratedImagePanX(0); // Reset pan
+        setGeneratedImagePanY(0);
+      };
+      img.src = imageUrl;
+
     } catch (error) {
       console.error("Generation failed", error);
+      toast.error("Ошибка генерации. Попробуйте еще раз.", { id: "generate" });
     } finally {
       setIsGenerating(false);
     }
   };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setUploadedImage(result);
+
+        // Auto-calculate scale to fit height
+        const img = new Image();
+        img.onload = () => {
+          const BANNER_HEIGHT = 168;
+          // Calculate scale to match banner height, but allow user to adjust from there
+          // We want the image to fill the height initially
+          const scale = BANNER_HEIGHT / img.naturalHeight;
+          setUploadedImageScale(scale);
+          setUploadedImagePanX(0); // Reset pan
+          setUploadedImagePanY(0);
+        };
+        img.src = result;
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const bannerRef = useRef<HTMLDivElement>(null);
 
   const handleDownload = useCallback(async (scale: number) => {
     if (!bannerRef.current) return;
@@ -217,6 +296,19 @@ const Index = () => {
             textGap={textGap}
             setTextGap={setTextGap}
             onReset={handleReset}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            onFileUpload={handleFileUpload}
+            uploadedImage={uploadedImage}
+            onRemoveImage={() => setUploadedImage(undefined)}
+            imageScale={activeTab === 'generate' ? generatedImageScale : uploadedImageScale}
+            setImageScale={activeTab === 'generate' ? setGeneratedImageScale : setUploadedImageScale}
+            imagePanX={activeTab === 'generate' ? generatedImagePanX : uploadedImagePanX}
+            setImagePanX={activeTab === 'generate' ? setGeneratedImagePanX : setUploadedImagePanX}
+            imagePanY={activeTab === 'generate' ? generatedImagePanY : uploadedImagePanY}
+            setImagePanY={activeTab === 'generate' ? setGeneratedImagePanY : setUploadedImagePanY}
+            imageFlipX={activeTab === 'generate' ? generatedImageFlipX : uploadedImageFlipX}
+            setImageFlipX={activeTab === 'generate' ? setGeneratedImageFlipX : setUploadedImageFlipX}
           />
         </div>
 
@@ -230,7 +322,7 @@ const Index = () => {
               subtitle={subtitle}
               backgroundColor={backgroundColor}
               gradientEnd={useGradient ? gradientEnd : undefined}
-              imageUrl={generatedImage}
+              imageUrl={activeTab === 'generate' ? generatedImage : uploadedImage}
               titleFontSize={titleFontSize}
               titleLineHeight={titleLineHeight}
               titleColor={titleColor}
@@ -243,6 +335,11 @@ const Index = () => {
               subtitleIsBold={subtitleIsBold}
               textAlignment={textAlignment}
               textGap={textGap}
+              imageScale={activeTab === 'generate' ? generatedImageScale : uploadedImageScale}
+              imagePanX={activeTab === 'generate' ? generatedImagePanX : uploadedImagePanX}
+              imagePanY={activeTab === 'generate' ? generatedImagePanY : uploadedImagePanY}
+              imageFlipX={activeTab === 'generate' ? generatedImageFlipX : uploadedImageFlipX}
+              isUpload={true}
             />
           </div>
 
