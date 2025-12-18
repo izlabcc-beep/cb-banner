@@ -1,14 +1,16 @@
+import { useEffect, useRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, RotateCcw, RotateCw, X, Bold, Upload, Trash2 } from "lucide-react";
-import { ColorPicker } from "./ColorPicker";
+import { Loader2, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, RotateCcw, RotateCw, X, Upload, Trash2, Check } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
+import { THEMES, ThemeId } from "@/constants/themes";
+import { cn } from "@/lib/utils";
 
 export type TextAlignment = "start" | "center" | "end";
 
@@ -17,40 +19,29 @@ interface BannerFormProps {
   setTitle: (value: string) => void;
   subtitle: string;
   setSubtitle: (value: string) => void;
-  backgroundColor: string;
-  setBackgroundColor: (value: string) => void;
-  gradientEnd: string;
-  setGradientEnd: (value: string) => void;
-  useGradient: boolean;
-  setUseGradient: (value: boolean) => void;
+
+  // Theme props
+  currentTheme: ThemeId;
+  setTheme: (value: ThemeId) => void;
+
   imagePrompt: string;
   setImagePrompt: (value: string) => void;
   onGenerate: () => void;
   isGenerating: boolean;
+
+  // Title Size props only
   titleFontSize: number;
   setTitleFontSize: (value: number) => void;
   titleLineHeight: number;
   setTitleLineHeight: (value: number) => void;
-  titleColor: string;
-  setTitleColor: (value: string) => void;
-  subtitleFontSize: number;
-  setSubtitleFontSize: (value: number) => void;
-  subtitleLineHeight: number;
-  setSubtitleLineHeight: (value: number) => void;
-  subtitleColor: string;
-  setSubtitleColor: (value: string) => void;
+
   hasSubtitleBackground: boolean;
   setHasSubtitleBackground: (value: boolean) => void;
-  subtitleBackgroundColor: string;
-  setSubtitleBackgroundColor: (value: string) => void;
   subtitleRotation: number;
   setSubtitleRotation: (value: number) => void;
-  subtitleIsBold: boolean;
-  setSubtitleIsBold: (value: boolean) => void;
-  textAlignment: TextAlignment;
-  setTextAlignment: (value: TextAlignment) => void;
-  textGap: number;
-  setTextGap: (value: number) => void;
+
+  // Removed textAlignment prop as it is fixed to center
+
   onReset: () => void;
   activeTab: "generate" | "upload";
   setActiveTab: (value: "generate" | "upload") => void;
@@ -72,12 +63,8 @@ export const BannerForm = ({
   setTitle,
   subtitle,
   setSubtitle,
-  backgroundColor,
-  setBackgroundColor,
-  gradientEnd,
-  setGradientEnd,
-  useGradient,
-  setUseGradient,
+  currentTheme,
+  setTheme,
   imagePrompt,
   setImagePrompt,
   onGenerate,
@@ -86,26 +73,11 @@ export const BannerForm = ({
   setTitleFontSize,
   titleLineHeight,
   setTitleLineHeight,
-  titleColor,
-  setTitleColor,
-  subtitleFontSize,
-  setSubtitleFontSize,
-  subtitleLineHeight,
-  setSubtitleLineHeight,
-  subtitleColor,
-  setSubtitleColor,
   hasSubtitleBackground,
   setHasSubtitleBackground,
-  subtitleBackgroundColor,
-  setSubtitleBackgroundColor,
   subtitleRotation,
   setSubtitleRotation,
-  subtitleIsBold,
-  setSubtitleIsBold,
-  textAlignment,
-  setTextAlignment,
-  textGap,
-  setTextGap,
+  // textAlignment removed
   onReset,
   activeTab,
   setActiveTab,
@@ -121,80 +93,65 @@ export const BannerForm = ({
   imageFlipX,
   setImageFlipX,
 }: BannerFormProps) => {
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+  const subtitleRef = useRef<HTMLTextAreaElement>(null);
+
+  const adjustHeight = (element: HTMLTextAreaElement | null) => {
+    if (!element) return;
+    element.style.height = 'auto';
+    element.style.height = `${element.scrollHeight}px`;
+  };
+
+  useEffect(() => {
+    adjustHeight(titleRef.current);
+  }, [title]);
+
+  useEffect(() => {
+    adjustHeight(subtitleRef.current);
+  }, [subtitle]);
+
   return (
     <div className="flex flex-col gap-4">
-      {/* Color picker */}
-      <ColorPicker
-        backgroundColor={backgroundColor}
-        setBackgroundColor={setBackgroundColor}
-        gradientEnd={gradientEnd}
-        setGradientEnd={setGradientEnd}
-        useGradient={useGradient}
-        setUseGradient={setUseGradient}
-      />
-
-      <Separator />
-
-      {/* Text alignment */}
-      <div className="flex items-center gap-3">
-        <Label className="text-sm font-medium text-foreground">Выравнивание</Label>
-        <ToggleGroup
-          type="single"
-          value={textAlignment}
-          onValueChange={(value) => value && setTextAlignment(value as TextAlignment)}
-          className="justify-start"
-        >
-          <ToggleGroupItem value="start" aria-label="Сверху" className="h-8 w-8 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-            <AlignVerticalJustifyStart className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="center" aria-label="По центру" className="h-8 w-8 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-            <AlignVerticalJustifyCenter className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="end" aria-label="Снизу" className="h-8 w-8 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-            <AlignVerticalJustifyEnd className="h-4 w-4" />
-          </ToggleGroupItem>
-        </ToggleGroup>
-        <div className="flex items-center gap-1 ml-auto">
-          <Label className="text-xs text-muted-foreground">Отступ</Label>
-          <Input
-            type="number"
-            value={textGap}
-            onChange={(e) => setTextGap(Number(e.target.value))}
-            min={0}
-            max={48}
-            className="w-16 h-7 bg-input border-border text-foreground text-xs text-center"
-            title="Отступ между заголовком и подзаголовком"
-          />
+      {/* Theme Picker */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-foreground">Выберите тему</Label>
+        <div className="flex flex-wrap gap-3">
+          {Object.values(THEMES).map((theme) => (
+            <button
+              key={theme.id}
+              onClick={() => setTheme(theme.id)}
+              className={cn(
+                "relative w-12 h-12 rounded-lg border-2 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+                currentTheme === theme.id
+                  ? "border-primary shadow-md"
+                  : "border-border/50 hover:border-border"
+              )}
+              style={{
+                background: `linear-gradient(135deg, ${theme.backgroundStart} 0%, ${theme.backgroundEnd} 100%)`
+              }}
+              title={theme.name}
+            >
+              {currentTheme === theme.id && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Check className={cn(
+                    "w-6 h-6 drop-shadow-md",
+                    // Adjust checkmark color for better contrast
+                    theme.id === 'white' ? "text-black" : "text-white"
+                  )} />
+                </div>
+              )}
+            </button>
+          ))}
         </div>
       </div>
+
+      <Separator />
 
       {/* Title input */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
           <Label className="text-sm font-medium text-foreground">Заголовок</Label>
           <div className="flex gap-2 items-center">
-            <input
-              type="color"
-              value={titleColor}
-              onChange={(e) => setTitleColor(e.target.value)}
-              className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0"
-              title="Цвет текста"
-            />
-            <Input
-              value={titleColor}
-              onChange={(e) => {
-                let value = e.target.value;
-                if (!value.startsWith('#') && /^[0-9A-Fa-f]{0,6}$/.test(value)) {
-                  value = '#' + value;
-                }
-                if (/^#[0-9A-Fa-f]{0,6}$/.test(value)) {
-                  setTitleColor(value);
-                }
-              }}
-              maxLength={7}
-              className="w-20 h-7 px-2 text-xs"
-              placeholder="#000000"
-            />
             <ToggleGroup
               type="single"
               value={
@@ -230,18 +187,11 @@ export const BannerForm = ({
           </div>
         </div>
         <Textarea
+          ref={titleRef}
           placeholder="Впишите ваш заголовок"
           value={title}
-          onChange={(e) => {
-            setTitle(e.target.value);
-            e.target.style.height = 'auto';
-            e.target.style.height = `${e.target.scrollHeight}px`;
-          }}
-          onInput={(e) => {
-            const target = e.target as HTMLTextAreaElement;
-            target.style.height = 'auto';
-            target.style.height = `${target.scrollHeight}px`;
-          }}
+          onChange={(e) => setTitle(e.target.value)}
+          onInput={(e) => adjustHeight(e.target as HTMLTextAreaElement)}
           maxLength={200}
           rows={1}
           className="min-h-[40px] resize-none bg-input border-border text-foreground placeholder:text-muted-foreground overflow-hidden"
@@ -252,85 +202,13 @@ export const BannerForm = ({
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
           <Label className="text-sm font-medium text-foreground">Подзаголовок</Label>
-          <div className="flex gap-2 items-center">
-            <Button
-              variant={subtitleIsBold ? "default" : "outline"}
-              size="icon"
-              className="h-7 w-7 p-0"
-              onClick={() => setSubtitleIsBold(!subtitleIsBold)}
-              title="Полужирный шрифт"
-            >
-              <Bold className="h-3 w-3" />
-            </Button>
-            <input
-              type="color"
-              value={subtitleColor}
-              onChange={(e) => setSubtitleColor(e.target.value)}
-              className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0"
-              title="Цвет текста"
-            />
-            <Input
-              value={subtitleColor}
-              onChange={(e) => {
-                let value = e.target.value;
-                if (!value.startsWith('#') && /^[0-9A-Fa-f]{0,6}$/.test(value)) {
-                  value = '#' + value;
-                }
-                if (/^#[0-9A-Fa-f]{0,6}$/.test(value)) {
-                  setSubtitleColor(value);
-                }
-              }}
-              maxLength={7}
-              className="w-20 h-7 px-2 text-xs"
-              placeholder="#000000"
-            />
-            <ToggleGroup
-              type="single"
-              value={
-                subtitleFontSize === 20 ? "M" :
-                  subtitleFontSize === 24 ? "L" :
-                    subtitleFontSize === 26 ? "X" : ""
-              }
-              onValueChange={(value) => {
-                if (!value) return;
-                if (value === "M") {
-                  setSubtitleFontSize(20);
-                  setSubtitleLineHeight(20);
-                } else if (value === "L") {
-                  setSubtitleFontSize(24);
-                  setSubtitleLineHeight(28);
-                } else if (value === "X") {
-                  setSubtitleFontSize(26);
-                  setSubtitleLineHeight(30);
-                }
-              }}
-              className="h-7"
-            >
-              <ToggleGroupItem value="M" size="sm" className="h-7 w-7 px-0 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-                M
-              </ToggleGroupItem>
-              <ToggleGroupItem value="L" size="sm" className="h-7 w-7 px-0 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-                L
-              </ToggleGroupItem>
-              <ToggleGroupItem value="X" size="sm" className="h-7 w-7 px-0 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-                X
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
         </div>
         <Textarea
+          ref={subtitleRef}
           placeholder="Впишите ваш подзаголовок"
           value={subtitle}
-          onChange={(e) => {
-            setSubtitle(e.target.value);
-            e.target.style.height = 'auto';
-            e.target.style.height = `${e.target.scrollHeight}px`;
-          }}
-          onInput={(e) => {
-            const target = e.target as HTMLTextAreaElement;
-            target.style.height = 'auto';
-            target.style.height = `${target.scrollHeight}px`;
-          }}
+          onChange={(e) => setSubtitle(e.target.value)}
+          onInput={(e) => adjustHeight(e.target as HTMLTextAreaElement)}
           maxLength={200}
           rows={1}
           className="min-h-[40px] resize-none bg-input border-border text-foreground placeholder:text-muted-foreground overflow-hidden"
@@ -341,30 +219,6 @@ export const BannerForm = ({
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium text-foreground">Подложка</Label>
         <div className="flex items-center gap-2">
-          {hasSubtitleBackground && (
-            <div className="flex gap-1.5 items-center animate-in fade-in zoom-in duration-200">
-              <input
-                type="color"
-                value={subtitleBackgroundColor}
-                onChange={(e) => setSubtitleBackgroundColor(e.target.value)}
-                className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0"
-                title="Цвет подложки"
-              />
-              <Input
-                value={subtitleBackgroundColor}
-                onChange={(e) => {
-                  let value = e.target.value;
-                  if (value && !value.startsWith('#') && /^[0-9A-Fa-f]/.test(value)) {
-                    value = '#' + value;
-                  }
-                  setSubtitleBackgroundColor(value);
-                }}
-                className="w-20 h-7 bg-input border-border text-foreground text-xs uppercase"
-                placeholder="#000000"
-                maxLength={7}
-              />
-            </div>
-          )}
           <Switch
             checked={hasSubtitleBackground}
             onCheckedChange={setHasSubtitleBackground}
@@ -467,7 +321,7 @@ export const BannerForm = ({
           {uploadedImage && (
             <Button
               variant="destructive"
-              onClick={onRemoveImage}
+              onClick={onRemoveImage || (() => { })}
               className="w-full"
             >
               <Trash2 className="w-4 h-4 mr-2" />
@@ -546,6 +400,5 @@ export const BannerForm = ({
         Очистить форму
       </Button>
     </div>
-
   );
 };

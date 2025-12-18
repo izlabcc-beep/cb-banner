@@ -167,18 +167,7 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
                   : `scale(${imageScale}) ${imageFlipX ? 'scaleX(-1)' : ''} translate(${imagePanX}px, ${imagePanY}px)`,
               }}
             />
-          ) : (
-            <div
-              className="w-full h-full bg-foreground/10 flex items-center justify-center"
-            >
-              <span
-                className="text-foreground/40"
-                style={{ fontSize: 12 * scale }}
-              >
-                AI Image
-              </span>
-            </div>
-          )}
+          ) : null}
         </div>
       </div>
     );
