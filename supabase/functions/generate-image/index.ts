@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { encode as encodeBase64 } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -33,7 +34,7 @@ async function removeBackground(imageBase64: string, mimeType: string): Promise<
       headers: {
         'X-Api-Key': REMOVEBG_API_KEY,
       },
-      body: formData
+      body: formData,
     });
 
     if (!response.ok) {
@@ -43,7 +44,7 @@ async function removeBackground(imageBase64: string, mimeType: string): Promise<
     }
 
     const resultBuffer = await response.arrayBuffer();
-    const resultBase64 = btoa(String.fromCharCode(...new Uint8Array(resultBuffer)));
+    const resultBase64 = encodeBase64(resultBuffer);
     console.log('Background removed successfully');
     return `data:image/png;base64,${resultBase64}`;
   } catch (error) {
@@ -51,6 +52,7 @@ async function removeBackground(imageBase64: string, mimeType: string): Promise<
     return `data:${mimeType};base64,${imageBase64}`;
   }
 }
+
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
