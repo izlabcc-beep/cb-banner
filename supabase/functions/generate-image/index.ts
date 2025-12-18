@@ -76,8 +76,8 @@ serve(async (req) => {
 
     console.log('Generating image with prompt:', prompt);
 
-    // Use Gemini image generation model
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${GOOGLE_API_KEY}`;
+    // Use Gemini image generation model (Nano Banana Pro)
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/nano-banana-pro-preview:generateContent?key=${GOOGLE_API_KEY}`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -91,7 +91,9 @@ serve(async (req) => {
           }]
         }],
         generationConfig: {
-          responseModalities: ["TEXT", "IMAGE"]
+          temperature: 1,
+          topP: 0.95,
+          topK: 64,
         }
       })
     });
