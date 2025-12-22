@@ -32,6 +32,7 @@ const Index = () => {
     uploadedImagePanX: 0,
     uploadedImagePanY: 0,
     uploadedImageFlipX: false,
+    generatedImage: undefined as string | undefined, // Add generatedImage to persisted state
   };
 
   // Load state from localStorage or use defaults
@@ -59,8 +60,8 @@ const Index = () => {
   const [currentTheme, setCurrentTheme] = useState<ThemeId>(state.currentTheme);
   const [imagePrompt, setImagePrompt] = useState(state.imagePrompt);
 
-  // Non-persisted state
-  const [generatedImage, setGeneratedImage] = useState<string | undefined>();
+  // Persisted state
+  const [generatedImage, setGeneratedImage] = useState<string | undefined>(state.generatedImage);
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState<"generate" | "upload">("generate");
   const [uploadedImage, setUploadedImage] = useState<string | undefined>();
@@ -115,6 +116,7 @@ const Index = () => {
       uploadedImagePanX,
       uploadedImagePanY,
       uploadedImageFlipX,
+      generatedImage, // Add generatedImage to save
     };
     localStorage.setItem("banner-state", JSON.stringify(stateToSave));
   }, [
@@ -122,7 +124,8 @@ const Index = () => {
     titleFontSize, titleLineHeight,
     hasSubtitleBackground, subtitleRotation,
     generatedImageScale, generatedImagePanX, generatedImagePanY, generatedImageFlipX,
-    uploadedImageScale, uploadedImagePanX, uploadedImagePanY, uploadedImageFlipX
+    uploadedImageScale, uploadedImagePanX, uploadedImagePanY, uploadedImageFlipX,
+    generatedImage // Add generatedImage to dependencies
   ]);
 
   const handleReset = () => {
@@ -144,11 +147,25 @@ const Index = () => {
     setUploadedImageFlipX(false);
 
     if (generatedImage) {
-      // confirm reset logic if needed, but for now we keep the image
-      // or we can clear it: setGeneratedImage(undefined);
+      // Keep generated image on reset as per new requirements or reset?
+      // User asked to persist it. Reset usually resets *settings*.
+      // If we want to clear everything:
+      // setGeneratedImage(undefined);
+      // But let's respect the "clear" button for that.
+      // Actually, standard "Reset" clears everything.
+      setGeneratedImage(undefined);
     }
     setUploadedImage(undefined);
     setActiveTab("generate");
+  };
+
+  const handleClearGeneratedImage = () => {
+    setGeneratedImage(undefined);
+    // Reset generated image settings maybe?
+    setGeneratedImageScale(1);
+    setGeneratedImagePanX(0);
+    setGeneratedImagePanY(0);
+    setGeneratedImageFlipX(false);
   };
 
   const handleGenerate = async () => {
@@ -158,7 +175,10 @@ const Index = () => {
     toast.loading("Генерация изображения...", { id: "generate" });
 
     try {
-      const imageUrl = await generateImage(imagePrompt);
+      const finalPrompt = theme.promptTemplate
+        ? theme.promptTemplate.replace("@PROMT@", imagePrompt)
+        : imagePrompt;
+      const imageUrl = await generateImage(finalPrompt);
       setGeneratedImage(imageUrl);
       setActiveTab("generate");
       toast.success("Изображение готово!", { id: "generate" });
@@ -279,6 +299,8 @@ const Index = () => {
             setImagePanY={activeTab === 'generate' ? setGeneratedImagePanY : setUploadedImagePanY}
             imageFlipX={activeTab === 'generate' ? generatedImageFlipX : uploadedImageFlipX}
             setImageFlipX={activeTab === 'generate' ? setGeneratedImageFlipX : setUploadedImageFlipX}
+            generatedImage={generatedImage}
+            onClearGeneratedImage={handleClearGeneratedImage}
           />
         </div>
 

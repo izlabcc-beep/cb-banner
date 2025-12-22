@@ -56,6 +56,8 @@ interface BannerFormProps {
   setImagePanY: (value: number) => void;
   imageFlipX: boolean;
   setImageFlipX: (value: boolean) => void;
+  generatedImage?: string;
+  onClearGeneratedImage: () => void;
 }
 
 export const BannerForm = ({
@@ -92,6 +94,8 @@ export const BannerForm = ({
   setImagePanY,
   imageFlipX,
   setImageFlipX,
+  generatedImage,
+  onClearGeneratedImage,
 }: BannerFormProps) => {
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const subtitleRef = useRef<HTMLTextAreaElement>(null);
@@ -274,12 +278,24 @@ export const BannerForm = ({
           </div>
 
           <Button
-            onClick={onGenerate}
-            disabled={isGenerating || !imagePrompt}
+            onClick={generatedImage ? onClearGeneratedImage : onGenerate}
+            disabled={isGenerating || (!imagePrompt && !generatedImage)}
+            variant={generatedImage ? "destructive" : "default"}
             className="w-full h-12 font-semibold rounded-full transition-all duration-200"
           >
-            {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isGenerating ? "Генерация..." : "Сгенерировать"}
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Генерация...
+              </>
+            ) : generatedImage ? (
+              <>
+                <Trash2 className="mr-2 h-5 w-5" />
+                Очистить и создать новое
+              </>
+            ) : (
+              "Сгенерировать"
+            )}
           </Button>
         </TabsContent>
         <TabsContent value="upload" className="space-y-4">
