@@ -15,6 +15,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
+        euclid: ['"Euclid Circular A"', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
