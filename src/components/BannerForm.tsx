@@ -1,10 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, RotateCcw, RotateCw, X, Upload, Trash2, Check } from "lucide-react";
+import { Loader2, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, RotateCcw, RotateCw, X, Upload, Trash2, Check, ArrowLeftRight, FolderOpen } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Template } from "./TemplatesDialog";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -56,9 +57,19 @@ interface BannerFormProps {
   setImagePanY: (value: number) => void;
   imageFlipX: boolean;
   setImageFlipX: (value: boolean) => void;
+  imageRotation: number;
+  setImageRotation: (value: number) => void;
   generatedImage?: string;
   onClearGeneratedImage: () => void;
+
+  templates: Template[];
+  onSaveTemplate: (name: string) => void;
+  onLoadTemplate: (template: Template) => void;
+  onDeleteTemplate: (id: string) => void;
+  onOpenTemplates: () => void;
 }
+
+
 
 export const BannerForm = ({
   title,
@@ -94,8 +105,15 @@ export const BannerForm = ({
   setImagePanY,
   imageFlipX,
   setImageFlipX,
+  imageRotation,
+  setImageRotation,
   generatedImage,
   onClearGeneratedImage,
+  templates,
+  onSaveTemplate,
+  onLoadTemplate,
+  onDeleteTemplate,
+  onOpenTemplates,
 }: BannerFormProps) => {
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const subtitleRef = useRef<HTMLTextAreaElement>(null);
@@ -114,11 +132,36 @@ export const BannerForm = ({
     adjustHeight(subtitleRef.current);
   }, [subtitle]);
 
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLTextAreaElement>,
+    setValue: (value: string) => void,
+    value: string
+  ) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      const textarea = e.currentTarget;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+
+      const newValue = value.substring(0, start) + "\n" + value.substring(end);
+      setValue(newValue);
+
+      // Restore cursor position after state update
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 1;
+      }, 0);
+    }
+  };
+
+
+
   return (
     <div className="flex flex-col gap-4">
       {/* Theme Picker */}
       <div className="space-y-3">
-        <Label className="text-sm font-medium text-foreground">Выберите тему</Label>
+        <div className="flex justify-between items-center">
+          <Label className="text-sm font-medium text-foreground">Выберите тему</Label>
+        </div>
         <div className="flex flex-wrap gap-3">
           {Object.values(THEMES).map((theme) => (
             <button
@@ -176,15 +219,27 @@ export const BannerForm = ({
                   setTitleLineHeight(36);
                 }
               }}
-              className="h-7"
+              className="gap-1"
             >
-              <ToggleGroupItem value="M" size="sm" className="h-7 w-7 px-0 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+              <ToggleGroupItem
+                value="M"
+                size="sm"
+                className="h-8 w-8 rounded-[4px] p-0 text-[20px] font-medium border border-input hover:bg-accent hover:text-accent-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+              >
                 M
               </ToggleGroupItem>
-              <ToggleGroupItem value="L" size="sm" className="h-7 w-7 px-0 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+              <ToggleGroupItem
+                value="L"
+                size="sm"
+                className="h-8 w-8 rounded-[8px] p-0 text-[20px] font-medium border border-input hover:bg-accent hover:text-accent-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+              >
                 L
               </ToggleGroupItem>
-              <ToggleGroupItem value="X" size="sm" className="h-7 w-7 px-0 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+              <ToggleGroupItem
+                value="X"
+                size="sm"
+                className="h-8 w-8 rounded-[8px] p-0 text-[20px] font-medium border border-input hover:bg-accent hover:text-accent-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+              >
                 X
               </ToggleGroupItem>
             </ToggleGroup>
@@ -196,6 +251,7 @@ export const BannerForm = ({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onInput={(e) => adjustHeight(e.target as HTMLTextAreaElement)}
+          onKeyDown={(e) => handleKeyDown(e, setTitle, title)}
           maxLength={200}
           rows={1}
           className="min-h-[40px] resize-none bg-input border-border text-foreground placeholder:text-muted-foreground overflow-hidden"
@@ -213,6 +269,7 @@ export const BannerForm = ({
           value={subtitle}
           onChange={(e) => setSubtitle(e.target.value)}
           onInput={(e) => adjustHeight(e.target as HTMLTextAreaElement)}
+          onKeyDown={(e) => handleKeyDown(e, setSubtitle, subtitle)}
           maxLength={200}
           rows={1}
           className="min-h-[40px] resize-none bg-input border-border text-foreground placeholder:text-muted-foreground overflow-hidden"
@@ -241,16 +298,28 @@ export const BannerForm = ({
             onValueChange={(value) => {
               if (value) setSubtitleRotation(Number(value));
             }}
-            className="justify-end"
+            className="justify-end gap-1"
           >
-            <ToggleGroupItem value="-2" aria-label="Повернуть против часовой" className="h-8 w-8 px-0 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-              <RotateCcw className="h-4 w-4" />
+            <ToggleGroupItem
+              value="-2"
+              aria-label="Повернуть против часовой"
+              className="h-8 w-8 rounded-[8px] p-0 border border-input hover:bg-accent hover:text-accent-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+            >
+              <RotateCcw className="h-5 w-5" />
             </ToggleGroupItem>
-            <ToggleGroupItem value="0" aria-label="Не поворачивать" className="h-8 w-8 px-0 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-              <X className="h-4 w-4" />
+            <ToggleGroupItem
+              value="0"
+              aria-label="Не поворачивать"
+              className="h-8 w-8 rounded-[8px] p-0 border border-input hover:bg-accent hover:text-accent-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+            >
+              <X className="h-5 w-5" />
             </ToggleGroupItem>
-            <ToggleGroupItem value="2" aria-label="Повернуть по часовой" className="h-8 w-8 px-0 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-              <RotateCw className="h-4 w-4" />
+            <ToggleGroupItem
+              value="2"
+              aria-label="Повернуть по часовой"
+              className="h-8 w-8 rounded-[8px] p-0 border border-input hover:bg-accent hover:text-accent-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+            >
+              <RotateCw className="h-5 w-5" />
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
@@ -349,29 +418,67 @@ export const BannerForm = ({
 
       {/* Image Adjustments */}
       <div className="space-y-4 pt-2">
-        <div className="space-y-2">
-          <div className="flex justify-between items-center text-sm">
-            <Label>Масштаб изображения</Label>
-            <div className="flex items-center gap-2">
-              <Button
-                variant={imageFlipX ? "default" : "outline"}
-                size="sm"
-                onClick={() => setImageFlipX(!imageFlipX)}
-                className="h-7 px-2 text-xs"
-              >
-                Отразить
-              </Button>
-              <span className="text-muted-foreground text-xs">{imageScale.toFixed(2)}x</span>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-sm">
+              <Label>Масштаб</Label>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant={imageFlipX ? "default" : "outline"}
+                  size="icon"
+                  className="h-6 w-6 rounded-[8px]"
+                  onClick={() => setImageFlipX(!imageFlipX)}
+                  title="Отразить горизонтально"
+                >
+                  <ArrowLeftRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-6 w-6 rounded-[8px]"
+                  onClick={() => setImageScale(1)}
+                  title="Сбросить масштаб"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+                <span className="text-muted-foreground text-xs w-8 text-right">{imageScale.toFixed(2)}x</span>
+              </div>
             </div>
+            <Slider
+              value={[imageScale]}
+              onValueChange={(value) => setImageScale(value[0])}
+              min={0.05}
+              max={3}
+              step={0.05}
+              className="w-full"
+            />
           </div>
-          <Slider
-            value={[imageScale]}
-            onValueChange={(value) => setImageScale(value[0])}
-            min={0.05}
-            max={3}
-            step={0.05}
-            className="w-full"
-          />
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-sm">
+              <Label>Поворот</Label>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-6 w-6 rounded-[8px]"
+                  onClick={() => setImageRotation(0)}
+                  title="Сбросить поворот"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+                <span className="text-muted-foreground text-xs w-8 text-right">{imageRotation}°</span>
+              </div>
+            </div>
+            <Slider
+              value={[imageRotation]}
+              onValueChange={(value) => setImageRotation(value[0])}
+              min={-180}
+              max={180}
+              step={1}
+              className="w-full"
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -415,6 +522,6 @@ export const BannerForm = ({
       >
         Очистить форму
       </Button>
-    </div>
+    </div >
   );
 };

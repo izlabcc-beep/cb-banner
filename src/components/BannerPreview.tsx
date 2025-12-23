@@ -24,6 +24,7 @@ export interface BannerPreviewProps {
   imagePanX?: number;
   imagePanY?: number;
   imageFlipX?: boolean;
+  imageRotation?: number;
   isUpload?: boolean;
 }
 
@@ -51,6 +52,7 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
     imagePanX = 0,
     imagePanY = 0,
     imageFlipX = false,
+    imageRotation = 0,
     isUpload = false,
   }, ref) => {
     const baseWidth = 640;
@@ -163,8 +165,9 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
                 }`}
               style={{
                 transform: isUpload
-                  ? `translate(-50%, -50%) scale(${imageScale}) ${imageFlipX ? 'scaleX(-1)' : ''} translate(${imagePanX}px, ${imagePanY}px)`
-                  : `scale(${imageScale}) ${imageFlipX ? 'scaleX(-1)' : ''} translate(${imagePanX}px, ${imagePanY}px)`,
+                  ? `translate(calc(-50% + ${imagePanX}px), calc(-50% + ${imagePanY}px)) rotate(${imageRotation}deg) scale(${imageScale}) ${imageFlipX ? 'scaleX(-1)' : ''}`
+                  : `translate(${imagePanX}px, ${imagePanY}px) rotate(${imageRotation}deg) scale(${imageScale}) ${imageFlipX ? 'scaleX(-1)' : ''}`,
+                transformOrigin: 'center center',
               }}
             />
           ) : null}

@@ -1,11 +1,26 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
+import { Button } from "@/components/ui/button";
+import { FolderOpen } from "lucide-react";
 import { BannerForm, TextAlignment } from "@/components/BannerForm";
 import { BannerPreview } from "@/components/BannerPreview";
 import { generateImage } from "@/services/imageService";
+import { Template, TemplatesDialog } from "@/components/TemplatesDialog";
 import { DownloadButtons } from "@/components/DownloadButtons";
 import { toast } from "sonner";
 import { toPng } from "html-to-image";
 import { THEMES, ThemeId } from "@/constants/themes";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Index = () => {
   // Constants for fixed values
@@ -32,6 +47,8 @@ const Index = () => {
     uploadedImagePanX: 0,
     uploadedImagePanY: 0,
     uploadedImageFlipX: false,
+    generatedImageRotation: 0,
+    uploadedImageRotation: 0,
     generatedImage: undefined as string | undefined, // Add generatedImage to persisted state
   };
 
@@ -55,6 +72,30 @@ const Index = () => {
     return DEFAULT_STATE;
   });
 
+  // Templates state
+  const [savedTemplates, setSavedTemplates] = useState<Template[]>(() => {
+    const saved = localStorage.getItem("banner-templates");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("Failed to parse templates", e);
+        return [];
+      }
+    }
+    return [];
+  });
+
+  // Track currently loaded template
+  const [currentTemplateId, setCurrentTemplateId] = useState<string | null>(null);
+  const [isOverwriteAlertOpen, setIsOverwriteAlertOpen] = useState(false);
+  const [templatesDialogMode, setTemplatesDialogMode] = useState<"list" | "save">("list");
+  const [isTemplatesDialogOpen, setIsTemplatesDialogOpen] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem("banner-templates", JSON.stringify(savedTemplates));
+  }, [savedTemplates]);
+
   const [title, setTitle] = useState(state.title);
   const [subtitle, setSubtitle] = useState(state.subtitle);
   const [currentTheme, setCurrentTheme] = useState<ThemeId>(state.currentTheme);
@@ -75,6 +116,8 @@ const Index = () => {
   const [uploadedImagePanX, setUploadedImagePanX] = useState(state.uploadedImagePanX || 0);
   const [uploadedImagePanY, setUploadedImagePanY] = useState(state.uploadedImagePanY || 0);
   const [uploadedImageFlipX, setUploadedImageFlipX] = useState(state.uploadedImageFlipX || false);
+  const [generatedImageRotation, setGeneratedImageRotation] = useState(state.generatedImageRotation || 0);
+  const [uploadedImageRotation, setUploadedImageRotation] = useState(state.uploadedImageRotation || 0);
 
   // Typography settings
   const [titleFontSize, setTitleFontSize] = useState(state.titleFontSize);
@@ -116,6 +159,8 @@ const Index = () => {
       uploadedImagePanX,
       uploadedImagePanY,
       uploadedImageFlipX,
+      generatedImageRotation,
+      uploadedImageRotation,
       generatedImage, // Add generatedImage to save
     };
     localStorage.setItem("banner-state", JSON.stringify(stateToSave));
@@ -123,8 +168,8 @@ const Index = () => {
     title, subtitle, currentTheme, imagePrompt,
     titleFontSize, titleLineHeight,
     hasSubtitleBackground, subtitleRotation,
-    generatedImageScale, generatedImagePanX, generatedImagePanY, generatedImageFlipX,
-    uploadedImageScale, uploadedImagePanX, uploadedImagePanY, uploadedImageFlipX,
+    generatedImageScale, generatedImagePanX, generatedImagePanY, generatedImageFlipX, generatedImageRotation,
+    uploadedImageScale, uploadedImagePanX, uploadedImagePanY, uploadedImageFlipX, uploadedImageRotation,
     generatedImage // Add generatedImage to dependencies
   ]);
 
@@ -145,27 +190,23 @@ const Index = () => {
     setUploadedImagePanX(0);
     setUploadedImagePanY(0);
     setUploadedImageFlipX(false);
+    setGeneratedImageRotation(0);
+    setUploadedImageRotation(0);
 
-    if (generatedImage) {
-      // Keep generated image on reset as per new requirements or reset?
-      // User asked to persist it. Reset usually resets *settings*.
-      // If we want to clear everything:
-      // setGeneratedImage(undefined);
-      // But let's respect the "clear" button for that.
-      // Actually, standard "Reset" clears everything.
-      setGeneratedImage(undefined);
-    }
+    // Actually, standard "Reset" clears everything.
+    setGeneratedImage(undefined);
     setUploadedImage(undefined);
     setActiveTab("generate");
+    setCurrentTemplateId(null);
   };
 
   const handleClearGeneratedImage = () => {
     setGeneratedImage(undefined);
     // Reset generated image settings maybe?
-    setGeneratedImageScale(1);
     setGeneratedImagePanX(0);
     setGeneratedImagePanY(0);
     setGeneratedImageFlipX(false);
+    setGeneratedImageRotation(0);
   };
 
   const handleGenerate = async () => {
@@ -228,6 +269,118 @@ const Index = () => {
     }
   };
 
+  // Template Handlers
+  const getCurrentStateRaw = () => ({
+    title,
+    subtitle,
+    currentTheme,
+    imagePrompt,
+    titleFontSize,
+    titleLineHeight,
+    hasSubtitleBackground,
+    subtitleRotation,
+    generatedImageScale,
+    generatedImagePanX,
+    generatedImagePanY,
+    generatedImageFlipX,
+    uploadedImageScale,
+    uploadedImagePanX,
+    uploadedImagePanY,
+    uploadedImageFlipX,
+    generatedImageRotation,
+    uploadedImageRotation,
+    generatedImage,
+  });
+
+  const handleSaveTemplate = (name: string) => {
+    const currentState = getCurrentStateRaw();
+
+    const newTemplate: Template = {
+      id: crypto.randomUUID(),
+      name,
+      createdAt: Date.now(),
+      state: currentState,
+    };
+
+    setSavedTemplates(prev => [newTemplate, ...prev]);
+    setCurrentTemplateId(newTemplate.id);
+    toast.success("Шаблон сохранен!");
+    setIsTemplatesDialogOpen(false);
+  };
+
+  const handleUpdateCurrentTemplate = () => {
+    if (!currentTemplateId) return;
+
+    const currentState = getCurrentStateRaw();
+
+    setSavedTemplates(prev => prev.map(t => {
+      if (t.id === currentTemplateId) {
+        return {
+          ...t,
+          state: currentState,
+          createdAt: Date.now() // Update timestamp? Maybe useful.
+        };
+      }
+      return t;
+    }));
+
+    toast.success("Шаблон обновлен!");
+    setIsOverwriteAlertOpen(false);
+  };
+
+  const handleLoadTemplate = (template: Template) => {
+    const s = template.state;
+    setTitle(s.title || DEFAULT_STATE.title);
+    setSubtitle(s.subtitle || DEFAULT_STATE.subtitle);
+    setCurrentTheme(s.currentTheme || DEFAULT_STATE.currentTheme);
+    setImagePrompt(s.imagePrompt || DEFAULT_STATE.imagePrompt);
+    setTitleFontSize(s.titleFontSize || DEFAULT_STATE.titleFontSize);
+    setTitleLineHeight(s.titleLineHeight || DEFAULT_STATE.titleLineHeight);
+    setHasSubtitleBackground(s.hasSubtitleBackground || DEFAULT_STATE.hasSubtitleBackground);
+    setSubtitleRotation(s.subtitleRotation || DEFAULT_STATE.subtitleRotation);
+
+    setGeneratedImageScale(s.generatedImageScale || 1);
+    setGeneratedImagePanX(s.generatedImagePanX || 0);
+    setGeneratedImagePanY(s.generatedImagePanY || 0);
+    setGeneratedImageFlipX(s.generatedImageFlipX || false);
+    setGeneratedImageRotation(s.generatedImageRotation || 0);
+
+    setUploadedImageScale(s.uploadedImageScale || 1);
+    setUploadedImagePanX(s.uploadedImagePanX || 0);
+    setUploadedImagePanY(s.uploadedImagePanY || 0);
+    setUploadedImageFlipX(s.uploadedImageFlipX || false);
+    setUploadedImageRotation(s.uploadedImageRotation || 0);
+
+    setGeneratedImage(s.generatedImage);
+
+    if (s.generatedImage) {
+      setActiveTab("generate");
+    } else {
+      setActiveTab("generate");
+    }
+
+    setCurrentTemplateId(template.id);
+    toast.success("Шаблон загружен!");
+    setIsTemplatesDialogOpen(false);
+  };
+
+  const handleDeleteTemplate = (id: string) => {
+    setSavedTemplates(prev => prev.filter(t => t.id !== id));
+    if (currentTemplateId === id) {
+      setCurrentTemplateId(null);
+    }
+    toast.success("Шаблон удален");
+  };
+
+  const handleSaveBannerClick = () => {
+    if (currentTemplateId) {
+      setIsOverwriteAlertOpen(true);
+    } else {
+      setTemplatesDialogMode("save");
+      setIsTemplatesDialogOpen(true);
+    }
+  };
+
   const bannerRef = useRef<HTMLDivElement>(null);
 
   const handleDownload = useCallback(async (scale: number) => {
@@ -258,12 +411,52 @@ const Index = () => {
     }
   }, []);
 
+  const handleDownloadImage = async () => {
+    const url = activeTab === 'generate' ? generatedImage : uploadedImage;
+    if (!url) {
+      toast.error("Нет изображения для скачивания");
+      return;
+    }
+
+    try {
+      // For data URLs (uploads)
+      if (url.startsWith('data:')) {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `image-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("Изображение скачано");
+        return;
+      }
+
+      // For remote URLs (generated)
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `generated-image-${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      toast.success("Изображение скачано");
+    } catch (error) {
+      console.error("Error downloading image:", error);
+      toast.error("Ошибка при скачивании изображения");
+    }
+  };
+
+  // Find current template object
+  const currentTemplate = savedTemplates.find(t => t.id === currentTemplateId);
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6 md:p-12">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-12 items-center justify-center w-full">
         {/* Controls section */}
         <div className="w-full max-w-md bg-card rounded-3xl p-6 shadow-sm border border-border/50">
-
           <BannerForm
             title={title}
             setTitle={setTitle}
@@ -299,13 +492,52 @@ const Index = () => {
             setImagePanY={activeTab === 'generate' ? setGeneratedImagePanY : setUploadedImagePanY}
             imageFlipX={activeTab === 'generate' ? generatedImageFlipX : uploadedImageFlipX}
             setImageFlipX={activeTab === 'generate' ? setGeneratedImageFlipX : setUploadedImageFlipX}
+            imageRotation={activeTab === 'generate' ? generatedImageRotation : uploadedImageRotation}
+            setImageRotation={activeTab === 'generate' ? setGeneratedImageRotation : setUploadedImageRotation}
             generatedImage={generatedImage}
             onClearGeneratedImage={handleClearGeneratedImage}
+
+            // Templates
+            templates={savedTemplates}
+            onSaveTemplate={handleSaveTemplate}
+            onLoadTemplate={handleLoadTemplate}
+            onDeleteTemplate={handleDeleteTemplate}
+            onOpenTemplates={() => {
+              setTemplatesDialogMode("list");
+              setIsTemplatesDialogOpen(true);
+            }}
           />
         </div>
 
         {/* Preview section */}
         <div className="flex flex-col items-center gap-6">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setTemplatesDialogMode("list");
+              setIsTemplatesDialogOpen(true);
+            }}
+            className="gap-2 px-6 justify-center border-white/40 bg-transparent text-foreground hover:bg-white/10 hover:text-foreground transition-colors"
+          >
+            <FolderOpen className="w-4 h-4" />
+            Сохранённые баннеры
+          </Button>
+
+          {/* Active Template Indicator */}
+          {currentTemplate && (
+            <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-2">
+              <span className="text-sm font-medium text-muted-foreground">
+                Текущий шаблон
+              </span>
+              <div className="flex items-center gap-2 text-foreground font-semibold">
+                <span>{currentTemplate.name}</span>
+                <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                  {format(currentTemplate.createdAt, "d MMM, HH:mm", { locale: ru })}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Banner preview */}
           <div className="relative">
             <BannerPreview
@@ -331,6 +563,7 @@ const Index = () => {
               imagePanX={activeTab === 'generate' ? generatedImagePanX : uploadedImagePanX}
               imagePanY={activeTab === 'generate' ? generatedImagePanY : uploadedImagePanY}
               imageFlipX={activeTab === 'generate' ? generatedImageFlipX : uploadedImageFlipX}
+              imageRotation={activeTab === 'generate' ? generatedImageRotation : uploadedImageRotation}
               isUpload={true}
             />
           </div>
@@ -338,10 +571,46 @@ const Index = () => {
           {/* Download buttons */}
           <DownloadButtons
             onDownload={handleDownload}
+            onSave={handleSaveBannerClick}
+            onDownloadImage={handleDownloadImage}
             disabled={isGenerating}
           />
         </div>
       </div>
+
+      <TemplatesDialog
+        isOpen={isTemplatesDialogOpen}
+        onClose={() => setIsTemplatesDialogOpen(false)}
+        templates={savedTemplates}
+        onSave={handleSaveTemplate}
+        onLoad={handleLoadTemplate}
+        onDelete={handleDeleteTemplate}
+        initialMode={templatesDialogMode}
+      />
+
+      <AlertDialog open={isOverwriteAlertOpen} onOpenChange={setIsOverwriteAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Сохранить шаблон</AlertDialogTitle>
+            <AlertDialogDescription>
+              Этот шаблон уже существует. Вы хотите обновить его или сохранить как новый?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              setTemplatesDialogMode("save");
+              setIsOverwriteAlertOpen(false);
+              setIsTemplatesDialogOpen(true);
+            }}>
+              Сохранить как новый
+            </AlertDialogAction>
+            <AlertDialogAction onClick={handleUpdateCurrentTemplate}>
+              Обновить текущий
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div >
   );
 };
