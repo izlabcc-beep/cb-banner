@@ -39,3 +39,37 @@ export const generateImage = async (prompt: string): Promise<string> => {
     throw error;
   }
 };
+
+export const removeBackground = async (imageBase64: string): Promise<string> => {
+  try {
+    console.log("✂️ Starting background removal...");
+
+    const startTime = Date.now();
+
+    const { data, error } = await supabase.functions.invoke('remove-background', {
+      body: { imageBase64 }
+    });
+
+    if (error) {
+      console.error("❌ Edge function error:", error);
+      throw new Error(error.message || 'Failed to remove background');
+    }
+
+    if (data?.error) {
+      console.error("❌ API error:", data.error);
+      throw new Error(data.error);
+    }
+
+    if (!data?.imageUrl) {
+      throw new Error('No image URL in response');
+    }
+
+    const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+    console.log(`✅ Background removed in ${totalTime}s`);
+
+    return data.imageUrl;
+  } catch (error) {
+    console.error("❌ Error removing background:", error);
+    throw error;
+  }
+};

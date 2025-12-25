@@ -6,6 +6,7 @@ import { FolderOpen } from "lucide-react";
 import { BannerForm, TextAlignment } from "@/components/BannerForm";
 import { BannerPreview } from "@/components/BannerPreview";
 import { generateImage } from "@/services/imageService";
+import { removeBackground } from "@/services/imageService";
 import { Template, TemplatesDialog } from "@/components/TemplatesDialog";
 import { DownloadButtons } from "@/components/DownloadButtons";
 import { toast } from "sonner";
@@ -104,6 +105,7 @@ const Index = () => {
   // Persisted state
   const [generatedImage, setGeneratedImage] = useState<string | undefined>(state.generatedImage);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isRemovingBackground, setIsRemovingBackground] = useState(false);
   const [activeTab, setActiveTab] = useState<"generate" | "upload">("generate");
   const [uploadedImage, setUploadedImage] = useState<string | undefined>();
 
@@ -266,6 +268,24 @@ const Index = () => {
         img.src = result;
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveBackground = async () => {
+    if (!uploadedImage) return;
+
+    setIsRemovingBackground(true);
+    toast.loading("Удаление фона...", { id: "remove-bg" });
+
+    try {
+      const resultUrl = await removeBackground(uploadedImage);
+      setUploadedImage(resultUrl);
+      toast.success("Фон удалён!", { id: "remove-bg" });
+    } catch (error) {
+      console.error("Background removal failed", error);
+      toast.error("Ошибка при удалении фона. Попробуйте еще раз.", { id: "remove-bg" });
+    } finally {
+      setIsRemovingBackground(false);
     }
   };
 
@@ -484,6 +504,8 @@ const Index = () => {
             onFileUpload={handleFileUpload}
             uploadedImage={uploadedImage}
             onRemoveImage={() => setUploadedImage(undefined)}
+            onRemoveBackground={handleRemoveBackground}
+            isRemovingBackground={isRemovingBackground}
             imageScale={activeTab === 'generate' ? generatedImageScale : uploadedImageScale}
             setImageScale={activeTab === 'generate' ? setGeneratedImageScale : setUploadedImageScale}
             imagePanX={activeTab === 'generate' ? generatedImagePanX : uploadedImagePanX}
