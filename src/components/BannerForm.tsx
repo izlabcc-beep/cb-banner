@@ -3,7 +3,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, RotateCcw, RotateCw, X, Upload, Trash2, Check, ArrowLeftRight, FolderOpen } from "lucide-react";
+import { Loader2, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, RotateCcw, RotateCw, X, Upload, Trash2, Check, ArrowLeftRight, FolderOpen, Scissors } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Template } from "./TemplatesDialog";
 import { Separator } from "@/components/ui/separator";
@@ -49,6 +49,8 @@ interface BannerFormProps {
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   uploadedImage?: string;
   onRemoveImage?: () => void;
+  onRemoveBackground?: () => void;
+  isRemovingBackground?: boolean;
   imageScale: number;
   setImageScale: (value: number) => void;
   imagePanX: number;
@@ -97,6 +99,8 @@ export const BannerForm = ({
   onFileUpload,
   uploadedImage,
   onRemoveImage,
+  onRemoveBackground,
+  isRemovingBackground,
   imageScale,
   setImageScale,
   imagePanX,
@@ -404,14 +408,34 @@ export const BannerForm = ({
           </div>
 
           {uploadedImage && (
-            <Button
-              variant="destructive"
-              onClick={onRemoveImage || (() => { })}
-              className="w-full"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Удалить изображение
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={onRemoveBackground}
+                disabled={isRemovingBackground}
+                className="flex-1"
+              >
+                {isRemovingBackground ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Обработка...
+                  </>
+                ) : (
+                  <>
+                    <Scissors className="w-4 h-4 mr-2" />
+                    Вырезать фон
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={onRemoveImage || (() => { })}
+                className="flex-1"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Удалить
+              </Button>
+            </div>
           )}
         </TabsContent>
       </Tabs>
