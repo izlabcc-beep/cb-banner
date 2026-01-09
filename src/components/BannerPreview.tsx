@@ -61,6 +61,8 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
     const paddingLeft = 32;
     const paddingVertical = 24;
 
+    const textMaxWidth = baseWidth * 0.7;
+
     const backgroundStyle = gradientEnd
       ? { background: `linear-gradient(135deg, ${backgroundColor} 0%, ${gradientEnd} 100%)` }
       : { backgroundColor };
@@ -99,7 +101,7 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
           className="absolute inset-0 flex flex-col z-10"
           style={{
             justifyContent,
-            paddingRight: imageAreaWidth * scale,
+            maxWidth: textMaxWidth * scale,
             paddingLeft: paddingLeft * scale,
             paddingTop: paddingVertical * scale,
             paddingBottom: paddingVertical * scale,
@@ -114,6 +116,7 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
               fontFamily: "'Euclid Circular A', 'Inter', sans-serif",
               fontWeight: 600,
               color: titleColor,
+              overflowWrap: "anywhere",
             }}
           >
             {renderTextWithBreaks(title, "")}
@@ -128,6 +131,7 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
               borderRadius: `${12 * scale}px`,
               display: 'inline-block',
               width: 'fit-content',
+              maxWidth: '100%',
               transform: hasSubtitleBackground ? `rotate(${subtitleRotation}deg)` : 'none',
               transition: 'transform 0.2s ease-in-out',
             }}
@@ -140,6 +144,7 @@ export const BannerPreview = forwardRef<HTMLDivElement, BannerPreviewProps>(
                 fontWeight: subtitleIsBold ? 600 : 400,
                 color: subtitleColor,
                 margin: 0,
+                overflowWrap: "anywhere",
               }}
             >
               {renderTextWithBreaks(subtitle, "")}
