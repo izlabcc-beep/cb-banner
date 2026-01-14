@@ -6,8 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const GOOGLE_API_KEY = Deno.env.get('GOOGLE_API_KEY');
 const REMOVEBG_API_KEY = Deno.env.get('REMOVEBG_API_KEY');
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
 async function removeBackground(imageBase64: string, mimeType: string): Promise<string> {
   if (!REMOVEBG_API_KEY) {
@@ -16,7 +16,6 @@ async function removeBackground(imageBase64: string, mimeType: string): Promise<
   }
 
   try {
-    // Convert base64 to binary
     const binaryString = atob(imageBase64);
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
@@ -53,7 +52,6 @@ async function removeBackground(imageBase64: string, mimeType: string): Promise<
   }
 }
 
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -69,40 +67,51 @@ serve(async (req) => {
       );
     }
 
-    if (!GOOGLE_API_KEY) {
+    if (!LOVABLE_API_KEY) {
       return new Response(
-        JSON.stringify({ error: 'Google API Key is not configured' }),
+        JSON.stringify({ error: 'LOVABLE_API_KEY is not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     console.log('Generating image with prompt:', prompt);
 
-    // Use Gemini image generation model (Nano Banana Pro)
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/nano-banana-pro-preview:generateContent?key=${GOOGLE_API_KEY}`;
-
-    const response = await fetch(url, {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: `Generate an image: ${prompt}`
-          }]
-        }],
-        generationConfig: {
-          temperature: 1,
-          topP: 0.95,
-          topK: 64,
-        }
-      })
+        model: 'google/gemini-2.5-flash-image-preview',
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        modalities: ['image', 'text']
+      }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Google API Error:', errorText);
+      console.error('Lovable AI API error:', response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'Payment required. Please add credits.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ error: `Image generation failed: ${response.statusText}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -112,30 +121,30 @@ serve(async (req) => {
     const data = await response.json();
     console.log('Image generated successfully');
 
-    if (!data.candidates?.[0]?.content?.parts) {
-      console.error('Unexpected response format:', JSON.stringify(data));
+    // Extract image from Lovable AI response format
+    const imageData = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+    if (!imageData) {
+      console.error('No image in response:', JSON.stringify(data));
       return new Response(
-        JSON.stringify({ error: 'Invalid response format from API' }),
+        JSON.stringify({ error: 'No image generated' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const imagePart = data.candidates[0].content.parts.find((part: any) => part.inlineData);
-
-    if (!imagePart?.inlineData?.data) {
-      return new Response(
-        JSON.stringify({ error: 'No image data in response' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Extract base64 and mime type from data URL
+    let finalImageUrl = imageData;
+    
+    if (imageData.startsWith('data:')) {
+      const match = imageData.match(/^data:([^;]+);base64,(.+)$/);
+      if (match) {
+        const mimeType = match[1];
+        const base64Data = match[2];
+        console.log('Removing background...');
+        finalImageUrl = await removeBackground(base64Data, mimeType);
+        console.log('Processing complete');
+      }
     }
-
-    const base64Image = imagePart.inlineData.data;
-    const mimeType = imagePart.inlineData.mimeType || 'image/png';
-
-    // Remove background
-    console.log('Removing background...');
-    const finalImageUrl = await removeBackground(base64Image, mimeType);
-    console.log('Processing complete');
 
     return new Response(
       JSON.stringify({ imageUrl: finalImageUrl }),
